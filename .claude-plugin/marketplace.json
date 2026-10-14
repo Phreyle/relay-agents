@@ -1,0 +1,12 @@
+{
+  "name": "relay-agents",
+  "description": "Phreyle's Claude Code plugins for AI engineering practice",
+  "owner": { "name": "Phreyle" },
+  "plugins": [
+    {
+      "name": "relay",
+      "source": "./plugins/relay",
+      "description": "Reviewer and tester agents, setup and ship skills, and a Stop-hook quality gate"
+    }
+  ]
+}

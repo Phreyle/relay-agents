@@ -1,0 +1,6 @@
+{
+  "extraKnownMarketplaces": {
+    "relay-agents": { "source": { "source": "directory", "path": "." } }
+  },
+  "enabledPlugins": { "relay@relay-agents": true }
+}
