@@ -24,11 +24,17 @@ try {
   input = JSON.parse(readFileSync(0, 'utf8') || '{}');
 } catch {}
 
-const dir = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+// Start from the session's cwd, not CLAUDE_PROJECT_DIR: that variable stays stale when a
+// session moves folders mid-flight. The git root also covers sessions inside a subfolder.
+// shortcut: the project root is the git root, so a relay.json in a monorepo subfolder is not found.
+const start = input.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const top = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: start, encoding: 'utf8' });
+if (top.status !== 0) finish(0); // not a git repo
+const dir = top.stdout.trim();
 const cfgPath = join(dir, '.claude', 'relay.json');
 if (!existsSync(cfgPath)) finish(0);
 
-// No git, or nothing changed: nothing to check.
+// Nothing changed: nothing to check.
 const status = spawnSync('git', ['status', '--porcelain'], { cwd: dir, encoding: 'utf8' });
 if (status.status !== 0 || !status.stdout.trim()) finish(0);
 

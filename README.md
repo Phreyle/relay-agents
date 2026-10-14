@@ -3,7 +3,7 @@
 A playground for learning AI engineering with Claude Code. It holds two things that run side by side, enabled for this repo only:
 
 - **relay**: my own Claude Code plugin (two agents, two skills, one Stop-hook quality gate).
-- **SuperClaude**: a third-party command and agent framework, installed at project scope (added in a later commit).
+- **SuperClaude** v4.3.0: a third-party command and agent framework, installed at project scope: 30 `/sc:*` commands in `.claude/commands/sc/` and 20 agents in `.claude/agents/`. It has no Claude Code plugin yet, and its official installer writes to global `~/.claude`, so it is installed by script instead. See `THIRD_PARTY/SuperClaude-LICENSE.md` for its license, the script and how to refresh it.
 
 ## How the pieces fit
 
@@ -19,6 +19,7 @@ plugins/relay/                    the plugin itself
   hooks/gates.mjs                 the quality gate (Node, no dependencies)
   hooks/gates.test.mjs            self-test for the gate
 .claude/                          this repo's own config (relay.json, settings.json)
+.claude/commands/sc/, agents/     SuperClaude (third-party, see THIRD_PARTY/)
 ```
 
 - **Marketplace**: a catalog file that tells Claude Code where plugins live, so other repos can install relay by name.
@@ -78,7 +79,10 @@ Inside this repo, relay loads straight from `plugins/relay/`, so edits apply at 
 
 ## What it costs in context
 
-Everything Claude loads every turn costs tokens. relay keeps that small: the two skills are invisible until invoked, the two agents each add a one-line description, and the hook adds nothing unless it blocks. `claude plugin details relay` prints the exact figure.
+Everything Claude loads every turn costs tokens. Measured with `/context` on 2026-10-14:
+
+- **relay: 79 tokens per turn.** The `reviewer` and `tester` agent descriptions cost 44 and 35. Neither skill appears in the Skills list (they set `disable-model-invocation`), so they cost nothing until you run them. The hook costs nothing unless it blocks. `claude plugin details relay` prints a static estimate of about 123 tokens that counts the skills, so it overstates.
+- **SuperClaude: about 0.9k tokens per turn.** Custom agents went from 1.1k to 2.0k for its 20 agents (about 45 each). The Skills line stayed at 9.8k, so its 30 commands showed no measurable cost there. These figures compare two sessions and are rounded to 0.1k.
 
 ## License
 
