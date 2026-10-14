@@ -3,7 +3,7 @@
 A playground for learning AI engineering with Claude Code. It holds two things that run side by side, enabled for this repo only:
 
 - **relay**: my own Claude Code plugin (two agents, two skills, one Stop-hook quality gate).
-- **SuperClaude**: a third-party command and agent framework, installed at project scope (added in a later commit).
+- **SuperClaude** v4.3.0: a third-party command and agent framework, installed at project scope: 30 `/sc:*` commands in `.claude/commands/sc/` and 20 agents in `.claude/agents/`. It has no Claude Code plugin yet, and its official installer writes to global `~/.claude`, so it is installed by script instead. See `THIRD_PARTY/SuperClaude-LICENSE.md` for its license, the script and how to refresh it.
 
 ## How the pieces fit
 
@@ -19,6 +19,7 @@ plugins/relay/                    the plugin itself
   hooks/gates.mjs                 the quality gate (Node, no dependencies)
   hooks/gates.test.mjs            self-test for the gate
 .claude/                          this repo's own config (relay.json, settings.json)
+.claude/commands/sc/, agents/     SuperClaude (third-party, see THIRD_PARTY/)
 ```
 
 - **Marketplace**: a catalog file that tells Claude Code where plugins live, so other repos can install relay by name.
