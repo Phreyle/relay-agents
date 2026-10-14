@@ -33,11 +33,12 @@ function setConfig(dir, config) {
   writeFileSync(join(dir, '.claude', 'relay.json'), JSON.stringify(config));
 }
 
-const run = (dir, sid) =>
+// env = the CLAUDE_PROJECT_DIR the hook sees, cwd = the session's cwd from the Stop JSON.
+const run = (dir, sid, { env = dir, cwd = dir } = {}) =>
   spawnSync(process.execPath, [GATES], {
-    input: JSON.stringify({ session_id: sid, cwd: dir }),
+    input: JSON.stringify({ session_id: sid, cwd }),
     encoding: 'utf8',
-    env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    env: { ...process.env, CLAUDE_PROJECT_DIR: env },
   });
 
 // Each test gets its own repo and session id, and cleans up after itself.
@@ -90,6 +91,18 @@ scenario('passing gates let Claude stop and reset the block counter', (make, sid
   const r = run(dir, sid);
   assert.equal(r.status, 2);
   assert.match(r.stderr, /blocked stop 1\/3/);
+});
+
+scenario('uses the session cwd when CLAUDE_PROJECT_DIR is stale', (make, sid) => {
+  const stale = make({});
+  const dir = make({ config: { gates: [FAIL] } });
+  assert.equal(run(dir, sid, { env: stale }).status, 2);
+});
+
+scenario('finds relay.json from a subfolder of the repo', (make, sid) => {
+  const dir = make({ config: { gates: [FAIL] } });
+  mkdirSync(join(dir, 'sub'));
+  assert.equal(run(dir, sid, { cwd: join(dir, 'sub') }).status, 2);
 });
 
 scenario('after 3 blocked stops the 4th is allowed with a notice', (make, sid) => {
