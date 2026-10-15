@@ -5,9 +5,18 @@ A playground for learning AI engineering with Claude Code. It holds two things t
 - **relay**: my own Claude Code plugin (two agents, three skills, a Stop-hook quality gate, and a live status board for every Claude session).
 - **SuperClaude** v4.3.0: a third-party command and agent framework, installed at project scope: 30 `/sc:*` commands in `.claude/commands/sc/` and 20 agents in `.claude/agents/`. It has no Claude Code plugin yet, and its official installer writes to global `~/.claude`, so it is installed by script instead. See `THIRD_PARTY/SuperClaude-LICENSE.md` for its license, the script and how to refresh it.
 
+## Quick guide: read this first after a break
+
+[![The relay-agents field guide: a five-step checklist and a map of who does what, you, Claude, automatic hooks or GitHub](docs/guide.png)](docs/guide.html)
+
+Open [`docs/guide.html`](docs/guide.html) from your local clone (double-click it, or ask Claude to open it). GitHub shows an HTML file as source code, so it only looks right locally. It is written for someone who works inside Claude Code: every step says who does it (you type a command, you ask Claude, it happens by itself, or it is on GitHub) and whether it is required or optional. It also has the board's card meanings, fixes for common problems, where everything lives, and a command cheat sheet.
+
+The same checklist, shorter, is built into the board: click **Guide** at the top of the board page. It opens by itself when the board has no cards.
+
 ## How the pieces fit
 
 ```
+docs/guide.html                   the visual field guide (open in a browser)
 .claude-plugin/marketplace.json   the catalog: "relay-agents" lists the plugin "relay"
 plugins/relay/                    the plugin itself
   .claude-plugin/plugin.json      name, version, license
@@ -20,7 +29,7 @@ plugins/relay/                    the plugin itself
   hooks/gates.mjs                 the quality gate (Node, no dependencies)
   hooks/emit.mjs, events.mjs      silent hook that records status events
   board/server.mjs, state.mjs     the board's server and its event-to-card logic
-  board/index.html                the board page
+  board/index.html                the board page and its short guide
   (each .mjs has a .test.mjs next to it)
 .claude/                          this repo's own config (relay.json, settings.json)
 .claude/commands/sc/, agents/     SuperClaude (third-party, see THIRD_PARTY/)
@@ -72,13 +81,14 @@ flowchart LR
   S -->|live updates| W["Browser"]
 ```
 
-Start it from any session where relay is enabled with `/relay:board`, or run `node plugins/relay/board/server.mjs [--port 4317] [--data <folder>]`.
+Start it from any session where relay is enabled with `/relay:board`, or run `node plugins/relay/board/server.mjs [--port 4317] [--data <folder>]`. The **Guide** button on the page shows a short step-by-step of how to use relay, with a badge on each step for who does it and whether it is optional.
 
 | Card | Meaning | Comes from |
 |---|---|---|
 | Working | You sent a prompt | `UserPromptSubmit` |
 | Checking gates | The Stop gate is running | `GatesStart` (from `gates.mjs`) |
 | Blocked n/3 | A gate failed and Claude is fixing it | `Stop`, result `blocked` |
+| Still failing | 3 blocked stops in a row, so relay let Claude stop | `Stop`, result `released` |
 | Ready to ship | All gates passed | `Stop`, result `passed` |
 | Needs you | A permission prompt or Claude is waiting for you | `Notification` |
 | Turn finished | The turn ended and no gates ran (no `relay.json`, or nothing changed) | `Stop`, result `skipped` |
@@ -92,9 +102,17 @@ Start it from any session where relay is enabled with `/relay:board`, or run `no
 - `events.jsonl` stores the first 60 characters of each prompt as the card's task line. It stays on your machine.
 - The emit hook prints nothing. Output from `SessionStart` and `UserPromptSubmit` hooks is added to Claude's context, so a chatty hook would cost tokens on every turn.
 
+**Which cards show.**
+- A card appears only after a real session start, prompt, notification, failure or end event. A gate run by hand sends only gate events, so it never gets a card.
+- A card disappears after 12 hours without events, or 24 hours for "needs you", "blocked" and "API error", because a window that was closed may never send `SessionEnd`. Ended sessions go after an hour. A working, checking or waiting card with no event for 30 minutes shows "(quiet)".
+- A context compaction restarts the session but leaves its card as it was.
+- Background-task notifications and subagent hand-backs are automated turns. They keep the task text you typed.
+
 **Limits.**
+- A session that was already running when relay loaded gets its card at its next prompt or session start.
 - "Needs you" stays until the next event: no hook fires when you answer a permission prompt, so the card clears at the next prompt or stop.
 - "Ready to ship" means the gates passed. It does not know whether you have committed or opened a PR.
+- When `events.jsonl` passes 1 MB it is moved aside to `events.1.jsonl` and the board reads only the new file, so a session that sends no event after that drops off until its next one. That takes thousands of events.
 - Hooks start a Node process per event. The delay is small but I have not measured it.
 
 ## Skills
@@ -119,8 +137,9 @@ Then start Claude Code and run `/relay:setup-project`. Commit that repo's `.clau
 `plugin.json` pins `version`, so users only get a new copy when that string changes. After pushing a change:
 
 1. Bump `version` in `plugins/relay/.claude-plugin/plugin.json`.
-2. In the repo that uses relay: `claude plugin marketplace update relay-agents`, then `claude plugin update relay@relay-agents`.
-3. In a running session, `/reload-plugins`.
+2. In each repo that uses relay: `claude plugin marketplace update relay-agents`, then `claude plugin update relay@relay-agents --scope local`. Use the scope you installed with; `claude plugin list` shows it.
+3. In each running session, `/reload-plugins`.
+4. If the board is running, stop it and start it again with `/relay:board`. A running board keeps the code it started with.
 
 **Testing unmerged changes.** Once relay is installed (any scope), Claude Code uses the installed copy. That copy comes from the marketplace source (GitHub `main` for this repo), not from your working folder, and a second install of the same version reuses the cached copy. So a change on a branch cannot reach a session through `claude plugin install` or `update` until it is merged to `main` and the version is bumped. To try a change first, start a session with `claude --plugin-dir ./plugins/relay`. Per the Claude Code docs, a plugin loaded that way replaces the installed copy of the same name for that one session. Before anything is installed, this repo loads relay straight from `plugins/relay/` through `.claude/settings.json`, and edits apply at the next session start or `/reload-plugins`.
 

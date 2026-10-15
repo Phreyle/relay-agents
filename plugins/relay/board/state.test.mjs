@@ -30,6 +30,7 @@ test('walks one session from idle to ready to ship', () => {
 
 test('marks gates before the failing one as passed', () => {
   const [c] = reduce([
+    ev(0, 'UserPromptSubmit', { task: 'x' }),
     ev(0, 'GatesStart', { gates: ['test', 'lint', 'types'] }),
     ev(1, 'Stop', { result: 'blocked', gate: 'lint', n: 2, max: 3 }),
   ], now(2));
@@ -38,6 +39,7 @@ test('marks gates before the failing one as passed', () => {
 
 test('a released stop stays blocked and shows it gave up', () => {
   const [c] = reduce([
+    ev(0, 'UserPromptSubmit', { task: 'x' }),
     ev(0, 'GatesStart', { gates: ['test'] }),
     ev(1, 'Stop', { result: 'released', gate: 'test' }),
   ], now(2));
@@ -50,7 +52,7 @@ test('a skipped stop is done with no gates', () => {
 });
 
 test('a blocked gate that was never announced leaves the gate list alone', () => {
-  const [c] = reduce([ev(0, 'Stop', { result: 'blocked', gate: 'relay.json', n: 1, max: 3 })], now(1));
+  const [c] = reduce([ev(0, 'UserPromptSubmit', { task: 'x' }), ev(0, 'Stop', { result: 'blocked', gate: 'relay.json', n: 1, max: 3 })], now(1));
   assert.deepEqual([c.state, c.gates], ['blocked', []]);
 });
 
@@ -70,7 +72,9 @@ test('sorts the cards that need attention first, then newest', () => {
   const cards = reduce([
     ev(0, 'SessionStart', {}, 'idle'),
     ev(1, 'UserPromptSubmit', { task: 'a' }, 'work'),
+    ev(2, 'UserPromptSubmit', { task: 'b' }, 'done'),
     ev(2, 'Stop', { result: 'passed' }, 'done'),
+    ev(3, 'UserPromptSubmit', { task: 'c' }, 'block'),
     ev(3, 'Stop', { result: 'blocked', gate: 'g', n: 1, max: 3 }, 'block'),
     ev(4, 'Notification', { type: 'permission_prompt' }, 'ask'),
   ], now(5));
@@ -92,6 +96,67 @@ test('flags a working session that has gone quiet', () => {
   const events = [ev(0, 'UserPromptSubmit', { task: 'x' })];
   assert.equal(reduce(events, now(5))[0].stale, false);
   assert.equal(reduce(events, now(45))[0].stale, true);
+});
+
+test('hides a session that only ran the gates by hand, until a real event shows up', () => {
+  const dryRun = [ev(0, 'GatesStart', { gates: ['lint'] }, 'run1'), ev(1, 'Stop', { result: 'passed' }, 'run1')];
+  assert.deepEqual(reduce(dryRun, now(2)), []);
+  assert.equal(reduce([...dryRun, ev(2, 'UserPromptSubmit', { task: 'x' }, 'run1')], now(3)).length, 1);
+});
+
+test('hides cards quiet for 12 hours, but keeps blocked and needs-you cards for 24', () => {
+  const hours = (n) => n * 60;
+  const pair = (min, id, event, extra) => [ev(min, 'UserPromptSubmit', { task: 'x' }, id), ev(min, event, extra, id)];
+  const events = [
+    ...pair(hours(13), 'ready-13h-old', 'Stop', { result: 'passed' }),
+    ...pair(hours(15), 'ready-11h-old', 'Stop', { result: 'passed' }),
+    ...pair(hours(3), 'blocked-23h-old', 'Stop', { result: 'blocked', gate: 'g', n: 1, max: 3 }),
+    ...pair(hours(1), 'blocked-25h-old', 'Stop', { result: 'blocked', gate: 'g', n: 1, max: 3 }),
+    ...pair(hours(3), 'asks-23h-old', 'Notification', { type: 'permission_prompt' }),
+    ...pair(hours(1), 'asks-25h-old', 'Notification', { type: 'permission_prompt' }),
+  ];
+  assert.deepEqual(reduce(events, now(hours(26))).map((c) => c.session), ['asks-23h-old', 'blocked-23h-old', 'ready-11h-old']);
+});
+
+test('an automated turn keeps the task you typed', () => {
+  const [c] = reduce([
+    ev(0, 'UserPromptSubmit', { task: 'Add rent reminder' }),
+    ev(1, 'Stop', { result: 'passed' }),
+    ev(2, 'UserPromptSubmit', { task: '<task-notification> <task-id>b4dl1mzoh' }),
+  ], now(3));
+  assert.deepEqual([c.state, c.task], ['working', 'Add rent reminder']);
+});
+
+test('a compaction restart leaves a working card alone', () => {
+  const [c] = reduce([ev(0, 'UserPromptSubmit', { task: 'Add rent reminder' }), ev(1, 'SessionStart', { source: 'compact' })], now(2));
+  assert.deepEqual([c.state, c.task], ['working', 'Add rent reminder']);
+});
+
+test('error cards stay for 24 hours like blocked and needs-you cards', () => {
+  const failed = (id, min) => [ev(min, 'UserPromptSubmit', { task: 'x' }, id), ev(min, 'StopFailure', { error: 'rate_limit' }, id)];
+  const events = [...failed('err-23h-old', 3 * 60), ...failed('err-25h-old', 60)];
+  assert.deepEqual(reduce(events, now(26 * 60)).map((c) => c.session), ['err-23h-old']);
+});
+
+test('flags a needs-you card that has gone quiet', () => {
+  const events = [ev(0, 'UserPromptSubmit', { task: 'x' }), ev(0, 'Notification', { type: 'permission_prompt' })];
+  assert.equal(reduce(events, now(5))[0].stale, false);
+  assert.equal(reduce(events, now(45))[0].stale, true);
+});
+
+test('an idle session expires after 12 hours', () => {
+  const events = [ev(0, 'SessionStart', { source: 'startup' })];
+  assert.equal(reduce(events, now(11 * 60)).length, 1);
+  assert.equal(reduce(events, now(13 * 60)).length, 0);
+});
+
+test('only real session events give a card', () => {
+  for (const event of ['SessionStart', 'UserPromptSubmit', 'Notification', 'StopFailure', 'SessionEnd']) {
+    assert.equal(reduce([ev(0, event, { type: 'permission_prompt' })], now(1)).length, 1, event);
+  }
+  for (const event of ['GatesStart', 'Stop']) {
+    assert.equal(reduce([ev(0, event, { result: 'passed' })], now(1)).length, 0, event);
+  }
 });
 
 test('ignores events without a session and survives empty input', () => {

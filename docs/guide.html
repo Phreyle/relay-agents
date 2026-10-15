@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>relay-agents field guide</title>
+<style>
+:root{--bg:#f7f6f3;--card:#fff;--text:#1f1e1d;--muted:#6b6a66;--line:#e4e2dc;--lane:#efede7;--code:#f1efe8;
+--you:#185fa5;--you-bg:#e6f1fb;--you-ink:#0c447c;--ai:#534ab7;--ai-bg:#eeedfe;--ai-ink:#3c3489;
+--auto:#0f6e56;--auto-bg:#e1f5ee;--auto-ink:#085041;--gh:#5f5e5a;--gh-bg:#f1efe8;--gh-ink:#444441;
+--warn:#854f0b;--warn-bg:#faeeda;--ok:#3b6d11;--ok-bg:#eaf3de;--bad:#a32d2d;--bad-bg:#fcebeb}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--text:#ecebe6;--muted:#a3a29b;--line:#34332f;--lane:#1b1b1a;--code:#2a2927;
+--you:#85b7eb;--you-bg:#0c447c;--you-ink:#e6f1fb;--ai:#afa9ec;--ai-bg:#3c3489;--ai-ink:#eeedfe;
+--auto:#5dcaa5;--auto-bg:#085041;--auto-ink:#e1f5ee;--gh:#b4b2a9;--gh-bg:#2e2d2a;--gh-ink:#d3d1c7;
+--warn:#fac775;--warn-bg:#633806;--ok:#97c459;--ok-bg:#27500a;--bad:#f09595;--bad-bg:#791f1f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:940px;margin:0 auto;padding:28px 18px 64px}
+h1{font-size:28px;font-weight:500;margin:0 0 4px}
+h2{font-size:20px;font-weight:500;margin:40px 0 12px}
+h3{font-size:16px;font-weight:500;margin:0}
+p{margin:8px 0}
+.lead{font-size:17px;color:var(--muted);margin:0 0 14px}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:14px 0 4px}
+a{color:var(--you)}
+nav a{text-decoration:none}
+nav a:hover{text-decoration:underline}
+code,.cmd{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:13.5px;background:var(--code);border-radius:6px;padding:1px 6px}
+.cmd{display:inline-block;padding:3px 10px;margin:2px 0}
+.b{display:inline-block;font-size:12px;font-weight:500;letter-spacing:.02em;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.b.you{background:var(--you-bg);color:var(--you-ink)}.b.ai{background:var(--ai-bg);color:var(--ai-ink)}
+.b.auto{background:var(--auto-bg);color:var(--auto-ink)}.b.gh{background:var(--gh-bg);color:var(--gh-ink)}
+.b.req{border:1.5px solid var(--text);color:var(--text)}.b.opt{border:1.5px dashed var(--muted);color:var(--muted)}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin:14px 0}
+.legend div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.legend .b{margin-bottom:4px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.start ol{margin:6px 0 0;padding-left:22px}.start li{margin:6px 0}
+.map{width:100%;height:auto;display:block;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.map .lane{fill:var(--lane)}.map .lane.plain{fill:var(--card)}
+.map .ll{font:500 13px system-ui,sans-serif;fill:var(--muted)}
+.map .tt{font:500 13px system-ui,sans-serif}.map .ts{font:12px system-ui,sans-serif}
+.map .n-you rect{fill:var(--you-bg);stroke:var(--you)}.map .n-you .tt,.map .n-you .ts{fill:var(--you-ink)}
+.map .n-ai rect{fill:var(--ai-bg);stroke:var(--ai)}.map .n-ai .tt,.map .n-ai .ts{fill:var(--ai-ink)}
+.map .n-auto rect{fill:var(--auto-bg);stroke:var(--auto)}.map .n-auto .tt,.map .n-auto .ts{fill:var(--auto-ink)}
+.map .n-gh rect{fill:var(--gh-bg);stroke:var(--gh)}.map .n-gh .tt,.map .n-gh .ts{fill:var(--gh-ink)}
+.map .arr{fill:none;stroke:var(--muted);stroke-width:1.6}.map .arr.warn{stroke:var(--warn);stroke-dasharray:5 4}.map .arr.ok{stroke:var(--ok)}
+.map .note{font:12px system-ui,sans-serif;fill:var(--muted)}.map .note.warn{fill:var(--warn)}.map .note.ok{fill:var(--ok)}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 0}
+.split ul{margin:6px 0 0;padding-left:20px}.split li{margin:4px 0}
+.step{display:grid;grid-template-columns:40px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+.num{width:36px;height:36px;border-radius:50%;background:var(--code);display:flex;align-items:center;justify-content:center;font-weight:500}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin:10px 0}
+.fact{background:var(--bg);border-radius:8px;padding:8px 10px;font-size:14px}
+.fact small{display:block;color:var(--muted);font-size:12px;margin-bottom:3px}
+.step ul{margin:6px 0 0;padding-left:20px}.step li{margin:4px 0}
+.hint{color:var(--muted);font-size:14px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:13px;background:var(--lane)}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-size:13px;padding:2px 10px;border-radius:8px;white-space:nowrap}
+.p-purple{background:var(--ai-bg);color:var(--ai-ink)}.p-amber{background:var(--warn-bg);color:var(--warn)}
+.p-green{background:var(--ok-bg);color:var(--ok)}.p-blue{background:var(--you-bg);color:var(--you-ink)}
+.p-gray{background:var(--gh-bg);color:var(--gh-ink)}.p-red{background:var(--bad-bg);color:var(--bad)}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:500}
+details p,details ul{font-size:15px}
+footer{margin-top:40px;color:var(--muted);font-size:13px}
+@media print{body{background:#fff}details{break-inside:avoid}.step{break-inside:avoid}}
+</style>
+</head>
+<body>
+<main>
+
+<h1>relay-agents field guide</h1>
+<p class="lead">How to use it from inside Claude Code, written to be read cold after a long break. Relay makes Claude check its own work before it says it is done, helps you ship that work, and shows every Claude session on one board.</p>
+<nav><a href="#back">Coming back</a><a href="#map">The loop</a><a href="#steps">Step by step</a><a href="#board">The board</a><a href="#fixes">When it breaks</a><a href="#where">Where things live</a><a href="#cheat">Cheat sheet</a></nav>
+
+<div class="legend" aria-label="How to read the badges">
+<div><span class="b auto">AUTO</span><br>Happens by itself through hooks. Nothing to type.</div>
+<div><span class="b you">YOU</span><br>Only you can do it: type a slash command. Claude does the work after.</div>
+<div><span class="b ai">ASK AI</span><br>Say it in plain words. Claude does it itself.</div>
+<div><span class="b gh">GITHUB</span><br>Outside Claude Code. Only you.</div>
+<div><span class="b req">REQUIRED</span> <span class="b opt">OPTIONAL</span><br>Skip an optional step and nothing breaks.</div>
+</div>
+
+<h2 id="back">If you forget everything, do this</h2>
+<div class="box start">
+<ol>
+<li>Open Claude Code in your project folder. <span class="b you">YOU</span> <span class="b req">REQUIRED</span></li>
+<li>First time in a project only: type <code>/relay:setup-project</code> and say yes to its plan. <span class="b you">YOU</span> <span class="b req">REQUIRED once</span></li>
+<li>Work as usual. Ask for changes. Relay checks them every time Claude says it is done. <span class="b ai">ASK AI</span> <span class="b auto">AUTO</span></li>
+<li>When you are happy, type <code>/relay:ship</code> and say yes to commit, push and the PR. <span class="b you">YOU</span> <span class="b opt">OPTIONAL</span></li>
+<li>Merge the PR in GitHub. <span class="b gh">GITHUB</span> <span class="b req">REQUIRED</span></li>
+</ol>
+<p class="hint">Want to watch several projects at once? Type <code>/relay:board</code>. <span class="b you">YOU</span> <span class="b opt">OPTIONAL</span> The board has a <strong>Guide</strong> button that shows this checklist in short.</p>
+</div>
+
+<h2 id="map">The loop, and who does what</h2>
+<svg class="map" viewBox="0 0 1040 360" role="img" aria-labelledby="mapT mapD">
+<title id="mapT">Who does what in the relay loop</title>
+<desc id="mapD">Seven steps in four lanes: you, Claude, automatic hooks and GitHub. You ask, Claude edits, the gate checks automatically and sends Claude back up to three times if a check fails. When checks pass you type relay ship, Claude reviews and then commits, pushes and opens a PR after each of your yeses, and you merge in GitHub.</desc>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect class="lane" x="0" y="8" width="1040" height="84" rx="8"/>
+<rect class="lane plain" x="0" y="92" width="1040" height="84"/>
+<rect class="lane" x="0" y="176" width="1040" height="84"/>
+<rect class="lane plain" x="0" y="260" width="1040" height="84" rx="8"/>
+<text class="ll" x="16" y="50" dominant-baseline="central">You</text>
+<text class="ll" x="16" y="134" dominant-baseline="central">Claude</text>
+<text class="ll" x="16" y="218" dominant-baseline="central">Automatic</text>
+<text class="ll" x="16" y="302" dominant-baseline="central">GitHub</text>
+
+<path class="arr" d="M176 78 V134 H246" marker-end="url(#ah)"/>
+<path class="arr" d="M364 134 H410 V188" marker-end="url(#ah)"/>
+<path class="arr warn" d="M378 230 H330 V164" marker-end="url(#ah)"/>
+<path class="arr ok" d="M494 218 H566 V80" marker-end="url(#ah)"/>
+<path class="arr" d="M624 50 H696 V104" marker-end="url(#ah)"/>
+<path class="arr" d="M754 134 H766" marker-end="url(#ah)"/>
+<path class="arr" d="M826 162 V230 H956 V272" marker-end="url(#ah)"/>
+<text class="note warn" x="96" y="252">fails: Claude fixes it, up to 3 times</text>
+<text class="note ok" x="574" y="196">checks pass</text>
+
+<g class="n-you"><rect x="118" y="22" width="116" height="56" rx="8"/><text class="tt" x="176" y="42" text-anchor="middle" dominant-baseline="central">1  Ask Claude</text><text class="ts" x="176" y="60" text-anchor="middle" dominant-baseline="central">in plain words</text></g>
+<g class="n-ai"><rect x="248" y="106" width="116" height="56" rx="8"/><text class="tt" x="306" y="126" text-anchor="middle" dominant-baseline="central">2  Claude edits</text><text class="ts" x="306" y="144" text-anchor="middle" dominant-baseline="central">your code changes</text></g>
+<g class="n-auto"><rect x="378" y="190" width="116" height="56" rx="8"/><text class="tt" x="436" y="210" text-anchor="middle" dominant-baseline="central">3  Gate checks</text><text class="ts" x="436" y="228" text-anchor="middle" dominant-baseline="central">runs by itself</text></g>
+<g class="n-you"><rect x="508" y="22" width="116" height="56" rx="8"/><text class="tt" x="566" y="42" text-anchor="middle" dominant-baseline="central">4  /relay:ship</text><text class="ts" x="566" y="60" text-anchor="middle" dominant-baseline="central">you type it</text></g>
+<g class="n-ai"><rect x="638" y="106" width="116" height="56" rx="8"/><text class="tt" x="696" y="126" text-anchor="middle" dominant-baseline="central">5  Review</text><text class="ts" x="696" y="144" text-anchor="middle" dominant-baseline="central">branch + reviewer</text></g>
+<g class="n-ai"><rect x="768" y="106" width="116" height="56" rx="8"/><text class="tt" x="826" y="126" text-anchor="middle" dominant-baseline="central">6  Commit + PR</text><text class="ts" x="826" y="144" text-anchor="middle" dominant-baseline="central">after each yes</text></g>
+<g class="n-gh"><rect x="898" y="274" width="116" height="56" rx="8"/><text class="tt" x="956" y="294" text-anchor="middle" dominant-baseline="central">7  Merge</text><text class="ts" x="956" y="312" text-anchor="middle" dominant-baseline="central">you, in GitHub</text></g>
+</svg>
+
+<div class="split">
+<div class="box"><h3>Only you can</h3><ul>
+<li>Type slash commands: <code>/relay:setup-project</code>, <code>/relay:ship</code>, <code>/relay:board</code>, <code>/reload-plugins</code>, <code>/plugin</code>.</li>
+<li>Say yes before Claude commits, pushes or opens a PR.</li>
+<li>Click Merge in GitHub.</li></ul></div>
+<div class="box"><h3>Claude can do itself</h3><ul>
+<li>Edit code, run the checks, write tests, review a diff.</li>
+<li>Commit, push and open a PR, each after your yes.</li>
+<li>Run <code>claude plugin ...</code> commands to install or update relay (it has a working <code>claude</code>; your app terminal does not).</li>
+<li>Inside <code>/relay:ship</code> it never merges, never force-pushes and never pushes <code>main</code>.</li></ul></div>
+</div>
+
+<h2 id="steps">Step by step</h2>
+
+<div class="step"><div class="num">A</div><div>
+<h3>Install relay (once per computer)</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b you">YOU</span> or <span class="b ai">ASK AI</span></div>
+<div class="fact"><small>Needed?</small><span class="b req">REQUIRED once</span></div>
+<div class="fact"><small>Can the AI do it?</small>Yes, after your yes. Or use the panel yourself.</div>
+</div>
+<p>On a new computer, first add the catalog: say <em>"Add the relay-agents marketplace"</em> and Claude runs <code>claude plugin marketplace add Phreyle/relay-agents</code> (the repo is private, so your GitHub login must work there). Then type <span class="cmd">/plugin install relay@relay-agents</span>. It opens a panel where you pick a scope: for you in every project, shared with this repo, or just you in this repo. Or say <em>"Install relay for all my projects"</em> and Claude runs <code>claude plugin install relay@relay-agents --scope user</code>.</p>
+<p class="hint">Right now relay is installed with the "just you in this repo" scope (<code>--scope local</code>) for relay-agents and Katiwala-App only. <code>claude plugin list</code> shows the version and scope. After any install or update, type <code>/reload-plugins</code>. Needs Node.js (the hooks and the board are Node scripts) and, for <code>/relay:ship</code> to open PRs, the <code>gh</code> command logged in to GitHub.</p>
+</div></div>
+
+<div class="step"><div class="num">B</div><div>
+<h3>Set up a project (once per project)</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b you">YOU</span> then Claude works</div>
+<div class="fact"><small>Needed?</small><span class="b req">REQUIRED once</span> without it relay does nothing there</div>
+<div class="fact"><small>Can the AI do it?</small>Yes. It does all the work and shows you the plan first.</div>
+</div>
+<p>Type <span class="cmd">/relay:setup-project</span>. Claude finds your tests, lint and typecheck, keeps only the ones that pass today without a running server, and shows the plan. After your yes it writes:</p>
+<ul>
+<li><code>.claude/relay.json</code>: the checks. <code>gates</code> run every time Claude says done, so keep them fast. <code>slow</code> (builds, smoke tests) only run in <code>/relay:ship</code>.</li>
+<li>A short <code>CLAUDE.md</code>, only if the project has none.</li>
+<li>Deny rules in <code>.claude/settings.json</code> that block the deploy, publish and remote-database scripts it finds. A guardrail, not a lock: it blocks those script names, not every way to deploy.</li>
+</ul>
+</div></div>
+
+<div class="step"><div class="num">C</div><div>
+<h3>Work normally. The gate runs by itself</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b ai">ASK AI</span> for changes, <span class="b auto">AUTO</span> for checks</div>
+<div class="fact"><small>Needed?</small><span class="b req">REQUIRED</span> but automatic once step B is done</div>
+<div class="fact"><small>Can the AI do it?</small>Claude edits. The gate needs nothing from either of you.</div>
+</div>
+<p>Say what you want, for example <em>"Add a rent reminder for overdue tenants"</em>. When Claude says it is done and the project has uncommitted changes, relay runs your checks in order. A clean working tree skips them.</p>
+<ul>
+<li>All pass: Claude may stop.</li>
+<li>One fails: Claude gets the last 40 lines of that check and keeps working. After 3 blocked stops in a row in the same session, it lets Claude stop and warns that the check is still failing. A green run resets the count. Each session counts on its own.</li>
+</ul>
+</div></div>
+
+<div class="step"><div class="num">D</div><div>
+<h3>Watch every session (optional)</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b you">YOU</span> then Claude starts it</div>
+<div class="fact"><small>Needed?</small><span class="b opt">OPTIONAL</span></div>
+<div class="fact"><small>Can the AI do it?</small>Yes, after you type the command.</div>
+</div>
+<p>Type <span class="cmd">/relay:board</span>. Claude starts a small local page at <code>http://127.0.0.1:4317</code> and opens it. Each Claude session in any project with relay gets one card, updated within about a second. It runs as a background task of the session that started it. It stops when the PC restarts, and may stop when that session closes (not tested). If the dot says reconnecting, type <code>/relay:board</code> again: events are kept in a file, so the cards come back. Click <strong>Guide</strong> on the board for a short version of this page. See <a href="#board">the board</a>.</p>
+</div></div>
+
+<div class="step"><div class="num">E</div><div>
+<h3>Ship it</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b you">YOU</span> then Claude works, you say yes</div>
+<div class="fact"><small>Needed?</small><span class="b opt">OPTIONAL</span></div>
+<div class="fact"><small>Can the AI do it?</small>Yes. You can also just say <em>"commit this and open a PR"</em>.</div>
+</div>
+<p>Type <span class="cmd">/relay:ship what you built</span>. Claude makes sure you are on a branch (never <code>main</code>), runs the gates and the slow checks, has the read-only <code>reviewer</code> agent check the diff, fixes serious findings, then shows the status, the commit message and the PR text. It asks before the commit, before the push and before opening the PR.</p>
+<p class="hint">Plain words skip the review and the slow checks. <code>/relay:ship</code> adds them.</p>
+</div></div>
+
+<div class="step"><div class="num">F</div><div>
+<h3>Merge the PR</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b gh">GITHUB</span> you</div>
+<div class="fact"><small>Needed?</small><span class="b req">REQUIRED</span> to land the change</div>
+<div class="fact"><small>Can the AI do it?</small>Not through relay. <code>/relay:ship</code> never merges, by design.</div>
+</div>
+<p>The only step outside Claude Code. Open the PR link Claude gave you and click Merge.</p>
+</div></div>
+
+<div class="step"><div class="num">G</div><div>
+<h3>Update relay itself (rare, only after you change relay)</h3>
+<div class="facts">
+<div class="fact"><small>Who</small><span class="b ai">ASK AI</span> then <span class="b you">YOU</span> <code>/reload-plugins</code></div>
+<div class="fact"><small>Needed?</small><span class="b opt">OPTIONAL</span></div>
+<div class="fact"><small>Can the AI do it?</small>Everything except <code>/reload-plugins</code>.</div>
+</div>
+<ul>
+<li>Ask Claude to change relay in the relay-agents project. It works on a branch and bumps <code>version</code> in <code>plugins/relay/.claude-plugin/plugin.json</code>. Without that bump, installs keep the old copy.</li>
+<li>Merge the PR in GitHub.</li>
+<li>Say <em>"Update relay in all my projects"</em>. Claude runs <code>claude plugin marketplace update relay-agents</code>, then <code>claude plugin update relay@relay-agents --scope local</code> from each project that has relay installed, asking before each. Use the scope you installed with.</li>
+<li>Type <code>/reload-plugins</code> in every open session.</li>
+<li>Restart the board if it is running: ask Claude to stop it, then type <code>/relay:board</code>. A running board keeps the old code until then.</li>
+</ul>
+<p class="hint">Ask Claude to run <code>claude plugin marketplace list</code> first. On this computer the relay-agents marketplace has flipped between GitHub and the local folder. To try an unmerged change first, start Claude from a terminal with <code>claude --plugin-dir ./plugins/relay</code>; it replaces the installed copy for that one session.</p>
+</div></div>
+
+<h2 id="board">The board: what each card means</h2>
+<table>
+<tr><th>Card</th><th>Meaning</th><th>What you do</th></tr>
+<tr><td><span class="pill p-purple">Needs you</span></td><td>A permission prompt, or Claude is waiting for you</td><td>Go to that session and answer</td></tr>
+<tr><td><span class="pill p-amber">Blocked 1/3</span></td><td>A check failed and Claude is fixing it</td><td>Nothing. <span class="b auto">AUTO</span></td></tr>
+<tr><td><span class="pill p-amber">Still failing</span></td><td>3 blocked stops in a row, so relay let Claude stop</td><td>Read the failing check, then fix it or ask Claude to</td></tr>
+<tr><td><span class="pill p-green">Ready to ship</span></td><td>All checks passed</td><td>Keep going, or type <code>/relay:ship</code></td></tr>
+<tr><td><span class="pill p-blue">Working</span> <span class="pill p-blue">Checking gates</span></td><td>A prompt was sent, or the checks are running</td><td>Nothing</td></tr>
+<tr><td><span class="pill p-gray">Turn finished</span></td><td>The turn ended and no checks ran: no <code>relay.json</code> there, or nothing changed</td><td>Nothing. Run <code>/relay:setup-project</code> if you expected checks</td></tr>
+<tr><td><span class="pill p-gray">Idle</span> <span class="pill p-gray">Ended</span></td><td>A session started or closed</td><td>Nothing</td></tr>
+<tr><td><span class="pill p-red">API error</span></td><td>The turn ended on an error such as a rate limit</td><td>Wait, then retry</td></tr>
+</table>
+<p class="hint">Cards for sessions quiet for 12 hours disappear (24 hours for needs you and blocked). A card appears only after a real session start or prompt, so a gate tested by hand never gets one. Several sessions in one project show a short tag.</p>
+
+<h2 id="fixes">When something looks wrong</h2>
+<details><summary>My terminal says "claude is not recognized"</summary>
+<p>The terminals inside the Claude app on this computer do not have the npm folder on their PATH. Ask Claude to run the command: its own shell finds <code>claude</code>. Or, in PowerShell: <code>&amp; "$env:APPDATA\npm\claude.cmd" plugin details relay</code>. A restart of the Claude app may fix it for good (not confirmed).</p></details>
+<details><summary>The board says "reconnecting"</summary>
+<p>The board server is not running: its session closed or the PC restarted. In any Claude session type <code>/relay:board</code>. Events are kept in a file, so the cards come back.</p></details>
+<details><summary>The board is empty, or a project never shows up</summary>
+<ul><li>Relay is not enabled there: install it (step A) and run <code>/relay:setup-project</code> (step B).</li>
+<li>You updated relay but did not type <code>/reload-plugins</code> in that session.</li>
+<li>A session already running when relay loaded appears after its next prompt.</li></ul></details>
+<details><summary>I merged a relay change but nothing changed</summary>
+<p>Check that <code>version</code> was bumped, then update (step G) and type <code>/reload-plugins</code>. <code>claude plugin details relay</code> shows which version is installed.</p></details>
+<details><summary>A card says "Still failing"</summary>
+<p>Relay blocked 3 stops in a row and gave up. Read the failing check, fix it, and the next green run resets the count.</p></details>
+<details><summary>The gate is too slow or too strict</summary>
+<p>Edit <code>.claude/relay.json</code>: keep <code>gates</code> fast and move builds into <code>slow</code>. To switch the checks off in one project, rename or delete that file. The board still lists that project's sessions.</p></details>
+
+<h2 id="where">Where things live</h2>
+<table>
+<tr><th>What</th><th>Where</th></tr>
+<tr><td>This repo</td><td><code>C:\Users\huash\Documents\GitHub\relay-agents</code> and GitHub <code>Phreyle/relay-agents</code> (private)</td></tr>
+<tr><td>Relay's source</td><td><code>plugins/relay/</code> (hooks, board, skills, agents)</td></tr>
+<tr><td>Per-project settings</td><td><code>.claude/relay.json</code> (checks), <code>.claude/settings.json</code> (deny rules), <code>CLAUDE.md</code></td></tr>
+<tr><td>Short guide</td><td>The <strong>Guide</strong> button on the board, <code>http://127.0.0.1:4317</code> (the board must be running)</td></tr>
+<tr><td>Board data</td><td><code>C:\Users\huash\.claude\plugins\data\relay-relay-agents\events.jsonl</code></td></tr>
+<tr><td>Installed copies</td><td><code>C:\Users\huash\.claude\plugins\cache\relay-agents\relay\&lt;version&gt;\</code></td></tr>
+<tr><td>SuperClaude (only in this repo)</td><td><code>.claude/commands/sc/</code> and <code>.claude/agents/</code>. Try <code>/sc:brainstorm</code>, <code>/sc:analyze</code>, <code>/sc:troubleshoot</code></td></tr>
+</table>
+
+<p class="hint">Paths are for this computer (user <code>huash</code>). On another computer the folder names differ.</p>
+
+<h2 id="cheat">Cheat sheet</h2>
+<table>
+<tr><th>Type in Claude Code</th><th>What it does</th></tr>
+<tr><td><code>/relay:setup-project</code></td><td>Once per project: finds the checks, sets guardrails</td></tr>
+<tr><td><code>/relay:ship [what you built]</code></td><td>Branch, checks, review, then asks before commit, push and PR</td></tr>
+<tr><td><code>/relay:board</code></td><td>Starts the board and opens it</td></tr>
+<tr><td><code>/reload-plugins</code></td><td>After any install or update, in every open session</td></tr>
+<tr><td><code>/plugin</code></td><td>Browse, install, update and remove plugins</td></tr>
+</table>
+<table style="margin-top:12px">
+<tr><th>Say to Claude</th><th>What happens</th></tr>
+<tr><td>"Install relay for all my projects"</td><td>Runs the install command after your yes</td></tr>
+<tr><td>"Update relay in all my projects"</td><td>Runs the marketplace and plugin updates, asking each time</td></tr>
+<tr><td>"Use the tester agent to write tests for this"</td><td>The tester agent writes tests in your project's own style</td></tr>
+<tr><td>"Have the reviewer look at my diff"</td><td>The read-only reviewer agent returns findings and never edits</td></tr>
+</table>
+
+<h2>What is proven and what is not</h2>
+<div class="box">
+<p><strong>Seen working in real sessions:</strong> the gate blocking a failing check (before the board existed), passing and skipped gate events reaching the board, cards for several projects at once, <code>SessionEnd</code> events recorded when sessions closed, the board starting from <code>/relay:board</code>, and the review step of <code>/relay:ship</code>.</p>
+<p><strong>Not seen yet:</strong> a real "needs you" card from a live permission prompt, a "blocked" card from a real failing check (tested with made-up events only), the delay the hooks add per event, old cards expiring on a live board (tested only in code), and what happens to the board when the session that started it closes.</p>
+<p><strong>Known limits:</strong> "needs you" stays until the next event, because nothing fires when you answer a prompt. "Ready to ship" only means the checks passed, not that you committed.</p>
+</div>
+
+<footer>Written 2026-10-15 for relay 0.2.1. Lives at <code>docs/guide.html</code> in Phreyle/relay-agents. Open it by double-clicking, or ask Claude to open it.</footer>
+</main>
+</body>
+</html>

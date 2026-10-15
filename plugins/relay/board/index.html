@@ -40,21 +40,57 @@ h1{font-size:20px;font-weight:500;margin:0}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--idle)}
 .dot.pass{background:var(--ok)}.dot.fail{background:var(--bad)}
 .empty{grid-column:1/-1;color:var(--muted);text-align:center;padding:48px 0}
+.bar{display:flex;align-items:center;gap:14px}
+button{font:inherit;font-size:13px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px 12px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+code{font:12.5px ui-monospace,Consolas,monospace;background:var(--gray-bg);border-radius:6px;padding:1px 6px}
+#guide{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:0 0 20px}
+#guide[hidden]{display:none}
+#guide h2{font-size:16px;font-weight:500;margin:0 0 4px}
+#guide .key,#guide .foot{font-size:12.5px;color:var(--muted);margin:4px 0 10px}
+#guide .foot{margin:10px 0 0}
+#guide ol{list-style:none;margin:0;padding:0;counter-reset:s}
+#guide li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);counter-increment:s}
+#guide li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--gray-bg);color:var(--gray);display:flex;align-items:center;justify-content:center;font-size:13px}
+#guide small{display:block;color:var(--muted);font-size:13px}
+.b{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.02em;padding:1px 8px;border-radius:999px;white-space:nowrap;vertical-align:1px}
+.b.you{background:var(--blue-bg);color:var(--blue)}.b.ai{background:var(--purple-bg);color:var(--purple)}
+.b.auto{background:var(--green-bg);color:var(--green)}.b.gh{background:var(--gray-bg);color:var(--gray)}
+.b.req,.b.opt{padding:0 7px}.b.req{border:1.5px solid var(--text)}.b.opt{border:1.5px dashed var(--muted);color:var(--muted)}
 </style>
 </head>
 <body>
 <main>
 <header>
 <h1>Relay board</h1>
+<div class="bar">
+<button id="guideBtn" type="button" aria-controls="guide" aria-expanded="false">Guide</button>
 <div class="live" id="live"><i></i><span>connecting</span></div>
+</div>
 </header>
 <div id="sum"></div>
+<section id="guide" hidden aria-label="How to use relay">
+<h2>How to use relay</h2>
+<p class="key"><span class="b you">YOU</span> only you can type it · <span class="b ai">ASK AI</span> say it in plain words, Claude does it · <span class="b auto">AUTO</span> happens by itself · <span class="b gh">GITHUB</span> outside Claude Code · <span class="b req">REQUIRED</span> <span class="b opt">OPTIONAL</span></p>
+<ol>
+<li><div><b>Open Claude Code in your project folder.</b> <span class="b you">YOU</span> <span class="b req">REQUIRED</span></div></li>
+<li><div><b>First time in a project: type <code>/relay:setup-project</code>, then say yes.</b> <span class="b you">YOU</span> <span class="b req">REQUIRED</span><small>Once per project. Claude finds your checks and shows the plan before it writes anything.</small></div></li>
+<li><div><b>Work as usual. Ask for changes.</b> <span class="b ai">ASK AI</span> <span class="b auto">AUTO</span><small>Each time Claude says it is done, relay runs your checks and sends it back if one fails. Nothing to do.</small></div></li>
+<li><div><b>Happy with it? Type <code>/relay:ship</code>.</b> <span class="b you">YOU</span> <span class="b opt">OPTIONAL</span><small>Claude reviews, then asks before commit, push and PR. Or just ask: "commit this and open a PR".</small></div></li>
+<li><div><b>Merge the PR in GitHub.</b> <span class="b gh">GITHUB</span> <span class="b req">REQUIRED</span><small>The only step outside Claude Code. Relay never merges.</small></div></li>
+<li><div><b>Watch this board.</b> <span class="b auto">AUTO</span><small>Purple: go answer that session. Amber: a check failed, Claude is fixing it. Green: ready to ship.</small></div></li>
+</ol>
+<p class="foot">Installed or updated relay? Type <code>/reload-plugins</code> in each open session. Full guide with pictures: <code>docs/guide.html</code> in the relay-agents repo.</p>
+</section>
 <div id="grid"></div>
 </main>
 <script>
 const grid = document.getElementById('grid');
 const sum = document.getElementById('sum');
 const live = document.getElementById('live');
+const guide = document.getElementById('guide');
+const guideBtn = document.getElementById('guideBtn');
+let guideOpen = null; // the first snapshot decides: open when there is nothing to watch yet
 const LABEL = { needs_you: 'Needs you', error: 'API error', ready: 'Ready to ship', checking: 'Checking gates', working: 'Working', done: 'Turn finished', idle: 'Idle', ended: 'Ended' };
 const CLS = { needs_you: 'purple', blocked: 'amber', error: 'red', ready: 'green', checking: 'blue', working: 'blue', done: 'gray', idle: 'gray', ended: 'gray' };
 const GROUPS = [['needs_you', 'need you'], ['blocked', 'blocked'], ['error', 'with errors'], ['ready', 'ready to ship'], ['working', 'working']];
@@ -80,8 +116,11 @@ function label(c) {
   return LABEL[c.state];
 }
 function render() {
+  guide.hidden = !guideOpen;
+  guideBtn.textContent = guideOpen ? 'Hide guide' : 'Guide';
+  guideBtn.setAttribute('aria-expanded', String(!!guideOpen));
   grid.replaceChildren();
-  if (!cards.length) grid.append(el('p', 'empty', 'No sessions yet. Start Claude Code in a repo that has relay enabled and its card appears here.'));
+  if (!cards.length) grid.append(el('p', 'empty', 'No sessions yet. Start Claude Code in a repo that has relay enabled and send a prompt, and its card appears here.'));
   const perRepo = {};
   for (const c of cards) perRepo[c.repo] = (perRepo[c.repo] || 0) + 1;
   for (const c of cards) {
@@ -122,9 +161,14 @@ function connect() {
   es.onerror = () => setLive(false);
   es.onmessage = (m) => {
     cards = JSON.parse(m.data).cards;
+    if (guideOpen === null) guideOpen = !cards.length;
     render();
   };
 }
+guideBtn.onclick = () => {
+  guideOpen = !guideOpen;
+  render();
+};
 connect();
 setInterval(render, 10000);
 render();
