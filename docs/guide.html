@@ -95,6 +95,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <li>Merge the PR in GitHub. <span class="b gh">GITHUB</span> <span class="b req">REQUIRED</span></li>
 </ol>
 <p class="hint">Want to watch several projects at once? Type <code>/relay:board</code>. <span class="b you">YOU</span> <span class="b opt">OPTIONAL</span> The board has a <strong>Guide</strong> button that shows this checklist in short.</p>
+<p class="hint">Bigger job? Type <code>/relay:plan what you want</code> first. <span class="b you">YOU</span> <span class="b opt">OPTIONAL</span> It saves your words and a checklist in <code>docs/plans/</code>, and <code>/relay:ship</code> ticks it.</p>
 </div>
 
 <h2 id="map">The loop, and who does what</h2>
@@ -132,7 +133,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 
 <div class="split">
 <div class="box"><h3>Only you can</h3><ul>
-<li>Type slash commands: <code>/relay:setup-project</code>, <code>/relay:ship</code>, <code>/relay:board</code>, <code>/reload-plugins</code>, <code>/plugin</code>.</li>
+<li>Type slash commands: <code>/relay:setup-project</code>, <code>/relay:plan</code>, <code>/relay:ship</code>, <code>/relay:board</code>, <code>/reload-plugins</code>, <code>/plugin</code>.</li>
 <li>Say yes before Claude commits, pushes or opens a PR.</li>
 <li>Click Merge in GitHub.</li></ul></div>
 <div class="box"><h3>Claude can do itself</h3><ul>
@@ -201,7 +202,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <div class="fact"><small>Needed?</small><span class="b opt">OPTIONAL</span></div>
 <div class="fact"><small>Can the AI do it?</small>Yes. You can also just say <em>"commit this and open a PR"</em>.</div>
 </div>
-<p>Type <span class="cmd">/relay:ship what you built</span>. Claude makes sure you are on a branch (never <code>main</code>), runs the gates and the slow checks, has the read-only <code>reviewer</code> agent check the diff, fixes serious findings, then shows the status, the commit message and the PR text. It asks before the commit, before the push and before opening the PR.</p>
+<p>Type <span class="cmd">/relay:ship what you built</span>. Claude makes sure you are on a branch (never <code>main</code>), runs the gates and the slow checks, has the read-only <code>reviewer</code> agent check the diff, fixes serious findings, then shows the status, the commit message and the PR text. It asks before the commit, before the push and before opening the PR. If a plan in <code>docs/plans/</code> is in progress, it ticks the boxes whose "Done when" check it has just confirmed.</p>
 <p class="hint">Plain words skip the review and the slow checks. <code>/relay:ship</code> adds them.</p>
 </div></div>
 
@@ -268,6 +269,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <tr><td>This repo</td><td><code>C:\Users\huash\Documents\GitHub\relay-agents</code> and GitHub <code>Phreyle/relay-agents</code> (private)</td></tr>
 <tr><td>Relay's source</td><td><code>plugins/relay/</code> (hooks, board, skills, agents)</td></tr>
 <tr><td>Per-project settings</td><td><code>.claude/relay.json</code> (checks), <code>.claude/settings.json</code> (deny rules), <code>AGENTS.md</code> and <code>CLAUDE.md</code> (the brief)</td></tr>
+<tr><td>Plans</td><td><code>docs/plans/</code> in each project (written by <code>/relay:plan</code>; this repo's roadmap is the first)</td></tr>
 <tr><td>Short guide</td><td>The <strong>Guide</strong> button on the board, <code>http://127.0.0.1:4317</code> (the board must be running)</td></tr>
 <tr><td>Board data</td><td><code>C:\Users\huash\.claude\plugins\data\relay-relay-agents\events.jsonl</code></td></tr>
 <tr><td>Installed copies</td><td><code>C:\Users\huash\.claude\plugins\cache\relay-agents\relay\&lt;version&gt;\</code></td></tr>
@@ -280,6 +282,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <table>
 <tr><th>Type in Claude Code</th><th>What it does</th></tr>
 <tr><td><code>/relay:setup-project</code></td><td>Once per project: finds the checks, sets guardrails</td></tr>
+<tr><td><code>/relay:plan [what you want]</code></td><td>Optional, for bigger jobs: saves your words and a checklist in docs/plans/</td></tr>
 <tr><td><code>/relay:ship [what you built]</code></td><td>Branch, checks, review, then asks before commit, push and PR</td></tr>
 <tr><td><code>/relay:board</code></td><td>Starts the board and opens it</td></tr>
 <tr><td><code>/reload-plugins</code></td><td>After any install or update, in every open session</td></tr>
@@ -300,7 +303,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <p><strong>Known limits:</strong> "needs you" stays until the next event, because nothing fires when you answer a prompt. "Ready to ship" only means the checks passed, not that you committed.</p>
 </div>
 
-<footer>Written 2026-10-15 for relay 0.3.1. Lives at <code>docs/guide.html</code> in Phreyle/relay-agents. Open it by double-clicking, or ask Claude to open it.</footer>
+<footer>Written 2026-10-15 for relay 0.4.0. Lives at <code>docs/guide.html</code> in Phreyle/relay-agents. Open it by double-clicking, or ask Claude to open it.</footer>
 </main>
 </body>
 </html>
