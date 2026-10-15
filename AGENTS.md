@@ -29,4 +29,5 @@ Add one line here each time something non-obvious costs you time: what happened 
 - `CLAUDE_PROJECT_DIR` goes stale when a session changes folders. The gate starts from the hook's `cwd` and the git root.
 - `claude plugin list` omits a relative-path plugin from a local marketplace. Use `claude plugin details relay`.
 - A running board keeps the code it started with. Restart it after an update. `/relay:board` runs the board from this folder, so keep this folder on `main` once a change is merged.
+- A skill with `disable-model-invocation` cannot be run by the agent. Test its text by having a fresh subagent follow it step by step in scratch folders under the session scratchpad, then send the folders to the Recycle Bin.
 - A board card needs a real event (start, prompt, notification, failure or end). A gate run by hand makes no card.

@@ -63,7 +63,7 @@ plugins/relay/                    the plugin itself
 }
 ```
 
-`gates` run at every stop and must be fast. `slow` is for builds and smoke tests; only `/relay:ship` runs them.
+`gates` run at every stop and must be fast. `slow` is for the build and checks too slow for every stop; only `/relay:ship` runs them. A check that needs a running server fits neither list.
 
 Self-test: `node --test "plugins/relay/**/*.test.mjs"`.
 
@@ -123,7 +123,7 @@ Start it from any session where relay is enabled with `/relay:board`, or run `no
 ## Skills
 
 - `/relay:board`: starts the board server and opens the page.
-- `/relay:setup-project`: run once in a new repo. Detects the stack, tries each check and keeps only those that pass today and need no running server, writes `.claude/relay.json`, writes an `AGENTS.md` brief and a one-line `CLAUDE.md` that imports it (it never overwrites either file), and adds deny rules for deploy, publish and remote-database scripts. It shows everything before writing.
+- `/relay:setup-project`: run once in a new repo. Detects the stack, tries each check and keeps only those that pass today and need no running server, writes `.claude/relay.json` (an existing one is kept), writes an `AGENTS.md` brief and a one-line `CLAUDE.md` that imports it (each only if missing, never overwritten; if both exist without an import, it offers to add one), and adds deny rules for deploy, publish and remote-database scripts. It shows everything before writing.
 - `/relay:ship [task]`: runs the gate and the slow checks, sends the diff to the reviewer agent, then asks before commit, push and PR. It refuses to work on `main`.
 
 ## Install relay in another repo
@@ -154,7 +154,7 @@ Everything Claude loads every turn costs tokens. Measured with `/context` on 202
 
 - **relay: 79 tokens per turn.** The `reviewer` and `tester` agent descriptions cost 44 and 35. None of the skills appears in the Skills list (all three set `disable-model-invocation`), so they cost nothing until you run them. The hooks add no tokens: the gate costs nothing unless it blocks, and the board's emit hook is silent. (Measured before the board existed; its hooks add no description, so I expect no change but have not re-measured.) `claude plugin details relay` prints a static estimate of about 123 tokens that counts the skills, so it overstates.
 - **SuperClaude: about 0.9k tokens per turn.** Custom agents went from 1.1k to 2.0k for its 20 agents (about 45 each). The Skills line stayed at 9.8k, so its 30 commands showed no measurable cost there. These figures compare two sessions and are rounded to 0.1k.
-- **This repo's `AGENTS.md`: about 700 tokens per session** (2,780 characters on 2026-10-15 at roughly 4 characters per token; an estimate, not measured with `/context`, and the file will grow). A brief is loaded into every session of the project, so keep it short.
+- **This repo's `AGENTS.md`: about 750 tokens per session** (3,005 characters on 2026-10-15 at roughly 4 characters per token; an estimate, not measured with `/context`, and the file will grow). A brief is loaded into every session of the project, so keep it short.
 
 ## License
 
