@@ -122,7 +122,7 @@ Then start Claude Code and run `/relay:setup-project`. Commit that repo's `.clau
 2. In the repo that uses relay: `claude plugin marketplace update relay-agents`, then `claude plugin update relay@relay-agents`.
 3. In a running session, `/reload-plugins`.
 
-Inside this repo, relay loads straight from `plugins/relay/`, so edits apply at the next session start or `/reload-plugins`.
+**Testing unmerged changes.** Once relay is installed (any scope), Claude Code uses the installed copy. That copy comes from the marketplace source (GitHub `main` for this repo), not from your working folder, and a second install of the same version reuses the cached copy. So a change on a branch cannot reach a session through `claude plugin install` or `update` until it is merged to `main` and the version is bumped. To try a change first, start a session with `claude --plugin-dir ./plugins/relay`. Per the Claude Code docs, a plugin loaded that way replaces the installed copy of the same name for that one session. Before anything is installed, this repo loads relay straight from `plugins/relay/` through `.claude/settings.json`, and edits apply at the next session start or `/reload-plugins`.
 
 ## What it costs in context
 
