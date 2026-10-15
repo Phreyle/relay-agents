@@ -4,7 +4,8 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+import { emit } from './events.mjs';
 
 const MAX_BLOCKS = 3;
 const TAIL_LINES = 40;
@@ -29,14 +30,28 @@ try {
 // shortcut: the project root is the git root, so a relay.json in a monorepo subfolder is not found.
 const start = input.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const top = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: start, encoding: 'utf8' });
-if (top.status !== 0) finish(0); // not a git repo
-const dir = top.stdout.trim();
+const dir = top.status === 0 ? top.stdout.trim() : start;
+
+// Status events feed the board: one Stop event per turn, plus GatesStart when gates actually run.
+const note = (event, extra) => emit({ session: input.session_id, repo: basename(dir), cwd: input.cwd, event, ...extra });
+const stop = (result, extra) => note('Stop', { result, ...extra });
+
+if (top.status !== 0) {
+  stop('skipped'); // not a git repo
+  finish(0);
+}
 const cfgPath = join(dir, '.claude', 'relay.json');
-if (!existsSync(cfgPath)) finish(0);
+if (!existsSync(cfgPath)) {
+  stop('skipped');
+  finish(0);
+}
 
 // Nothing changed: nothing to check.
 const status = spawnSync('git', ['status', '--porcelain'], { cwd: dir, encoding: 'utf8' });
-if (status.status !== 0 || !status.stdout.trim()) finish(0);
+if (status.status !== 0 || !status.stdout.trim()) {
+  stop('skipped');
+  finish(0);
+}
 
 // Block counter lives in the OS temp dir so nothing is written into the repo.
 const sid = String(input.session_id || 'nosession').replace(/[^\w-]/g, '_');
@@ -57,9 +72,11 @@ const writeBlocks = (blocks) => {
 function fail(name, detail) {
   const blocks = readBlocks();
   if (blocks >= MAX_BLOCKS) {
+    stop('released', { gate: name });
     const msg = `relay: gate "${name}" still failing after ${MAX_BLOCKS} blocked stops; letting Claude stop. Fix it before you commit.`;
     finish(0, 1, JSON.stringify({ systemMessage: msg }));
   }
+  stop('blocked', { gate: name, n: blocks + 1, max: MAX_BLOCKS });
   writeBlocks(blocks + 1);
   finish(2, 2, `relay gate "${name}" failed. ${detail}\nFix it, then finish again. (blocked stop ${blocks + 1}/${MAX_BLOCKS})`);
 }
@@ -72,8 +89,9 @@ try {
 }
 
 const timeoutMs = (cfg.timeoutSec || 120) * 1000;
-for (const gate of Array.isArray(cfg.gates) ? cfg.gates : []) {
-  if (typeof gate.cmd !== 'string') continue;
+const gates = (Array.isArray(cfg.gates) ? cfg.gates : []).filter((g) => typeof g.cmd === 'string');
+note('GatesStart', { gates: gates.map((g) => g.name || g.cmd) });
+for (const gate of gates) {
   const name = gate.name || gate.cmd;
   const run = spawnSync(gate.cmd, { cwd: dir, shell: true, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 });
   if (run.status === 0) continue;
@@ -83,4 +101,5 @@ for (const gate of Array.isArray(cfg.gates) ? cfg.gates : []) {
 }
 
 writeBlocks(0);
+stop('passed');
 finish(0);

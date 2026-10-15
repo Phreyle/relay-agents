@@ -1,6 +1,6 @@
 {
   "gates": [
-    { "name": "self-test", "cmd": "node --test \"plugins/relay/hooks/*.test.mjs\"" },
+    { "name": "self-test", "cmd": "node --test \"plugins/relay/**/*.test.mjs\"" },
     { "name": "validate", "cmd": "claude plugin validate . && claude plugin validate ./plugins/relay" }
   ],
   "slow": [],

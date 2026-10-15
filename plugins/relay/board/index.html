@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relay board</title>
+<style>
+:root{--bg:#f7f6f3;--card:#fff;--text:#1f1e1d;--muted:#6b6a66;--line:#e4e2dc;
+--blue-bg:#e6f1fb;--blue:#0c447c;--amber-bg:#faeeda;--amber:#633806;--green-bg:#eaf3de;--green:#27500a;
+--red-bg:#fcebeb;--red:#791f1f;--gray-bg:#f1efe8;--gray:#444441;--purple-bg:#eeedfe;--purple:#3c3489;
+--ok:#3b6d11;--bad:#a32d2d;--idle:#b4b2a9}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--text:#ecebe6;--muted:#a3a29b;--line:#34332f;
+--blue-bg:#0c447c;--blue:#b5d4f4;--amber-bg:#633806;--amber:#fac775;--green-bg:#27500a;--green:#c0dd97;
+--red-bg:#791f1f;--red:#f7c1c1;--gray-bg:#2e2d2a;--gray:#d3d1c7;--purple-bg:#3c3489;--purple:#cecbf6;
+--ok:#97c459;--bad:#f09595;--idle:#5f5e5a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+h1{font-size:20px;font-weight:500;margin:0}
+.live{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--idle);display:inline-block}
+.live.on i{background:var(--ok)}
+#sum{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;min-height:28px}
+.chip{font-size:13px;padding:3px 10px;border-radius:8px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.repo{font-weight:500;overflow-wrap:anywhere}
+.tag{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.ago{font-size:12px;color:var(--muted);white-space:nowrap}
+.badge{display:inline-block;font-size:13px;padding:3px 10px;border-radius:8px}
+.blue{background:var(--blue-bg);color:var(--blue)}.amber{background:var(--amber-bg);color:var(--amber)}
+.green{background:var(--green-bg);color:var(--green)}.red{background:var(--red-bg);color:var(--red)}
+.gray{background:var(--gray-bg);color:var(--gray)}.purple{background:var(--purple-bg);color:var(--purple)}
+.task{margin:10px 0 2px;font-size:14px;overflow-wrap:anywhere}
+.detail{margin:0 0 10px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.gates{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
+.gates span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--idle)}
+.dot.pass{background:var(--ok)}.dot.fail{background:var(--bad)}
+.empty{grid-column:1/-1;color:var(--muted);text-align:center;padding:48px 0}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Relay board</h1>
+<div class="live" id="live"><i></i><span>connecting</span></div>
+</header>
+<div id="sum"></div>
+<div id="grid"></div>
+</main>
+<script>
+const grid = document.getElementById('grid');
+const sum = document.getElementById('sum');
+const live = document.getElementById('live');
+const LABEL = { needs_you: 'Needs you', error: 'API error', ready: 'Ready to ship', checking: 'Checking gates', working: 'Working', done: 'Turn finished', idle: 'Idle', ended: 'Ended' };
+const CLS = { needs_you: 'purple', blocked: 'amber', error: 'red', ready: 'green', checking: 'blue', working: 'blue', done: 'gray', idle: 'gray', ended: 'gray' };
+const GROUPS = [['needs_you', 'need you'], ['blocked', 'blocked'], ['error', 'with errors'], ['ready', 'ready to ship'], ['working', 'working']];
+let cards = [];
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function ago(iso) {
+  const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+  if (s < 10) return 'just now';
+  if (s < 60) return s + 's ago';
+  const m = Math.round(s / 60);
+  if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60);
+  return h < 24 ? h + ' h ago' : Math.round(h / 24) + ' d ago';
+}
+function label(c) {
+  if (c.state === 'blocked') return c.released ? 'Still failing' : 'Blocked ' + c.n + '/' + c.max;
+  return LABEL[c.state];
+}
+function render() {
+  grid.replaceChildren();
+  if (!cards.length) grid.append(el('p', 'empty', 'No sessions yet. Start Claude Code in a repo that has relay enabled and its card appears here.'));
+  const perRepo = {};
+  for (const c of cards) perRepo[c.repo] = (perRepo[c.repo] || 0) + 1;
+  for (const c of cards) {
+    const card = el('div', 'card');
+    const top = el('div', 'top');
+    const name = el('span', 'repo', c.repo || 'unknown');
+    if (perRepo[c.repo] > 1) name.append(el('span', 'tag', c.tag));
+    top.append(name, el('span', 'ago', ago(c.last) + (c.stale ? ' (quiet)' : '')));
+    card.append(top, el('span', 'badge ' + CLS[c.state], label(c)));
+    if (c.task) card.append(el('p', 'task', c.task));
+    card.append(el('p', 'detail', c.detail));
+    if (c.gates.length) {
+      const g = el('div', 'gates');
+      for (const x of c.gates) {
+        const s = el('span');
+        s.append(el('i', 'dot ' + x.status), document.createTextNode(x.name));
+        g.append(s);
+      }
+      card.append(g);
+    }
+    grid.append(card);
+  }
+  sum.replaceChildren();
+  for (const [state, text] of GROUPS) {
+    const n = cards.filter((c) => c.state === state || (state === 'working' && c.state === 'checking')).length;
+    if (n) sum.append(el('span', 'chip ' + CLS[state], n + ' ' + text));
+  }
+  const urgent = cards.filter((c) => c.state === 'needs_you' || c.state === 'blocked' || c.state === 'error').length;
+  document.title = (urgent ? '(' + urgent + ') ' : '') + 'Relay board';
+}
+function setLive(on) {
+  live.className = 'live' + (on ? ' on' : '');
+  live.lastChild.textContent = on ? 'live' : 'reconnecting';
+}
+function connect() {
+  const es = new EventSource('/events');
+  es.onopen = () => setLive(true);
+  es.onerror = () => setLive(false);
+  es.onmessage = (m) => {
+    cards = JSON.parse(m.data).cards;
+    render();
+  };
+}
+connect();
+setInterval(render, 10000);
+render();
+</script>
+</body>
+</html>
