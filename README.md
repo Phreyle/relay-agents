@@ -29,7 +29,7 @@ plugins/relay/                    the plugin itself
 - **Marketplace**: a catalog file that tells Claude Code where plugins live, so other repos can install relay by name.
 - **Plugin**: a folder of agents, skills and hooks that Claude Code loads as one unit. Its commands are prefixed with the plugin name, for example `/relay:ship`.
 - **Agent** (subagent): a specialist Claude can hand a job to, with its own tool allowlist. `reviewer` only has Read, Grep and Glob, so it cannot edit anything. `tester` can edit and run, but its instructions limit it to test files.
-- **Skill**: a reusable instruction file that runs when you type its command. Both relay skills set `disable-model-invocation`, so they are never loaded unless you call them.
+- **Skill**: a reusable instruction file that runs when you type its command. All three relay skills set `disable-model-invocation`, so they are never loaded unless you call them.
 - **Hook**: a script Claude Code runs at a lifecycle event. relay uses `Stop`, which fires each time Claude says it is done, plus five more events for the board.
 
 ## The quality gate (Stop hook)
@@ -128,7 +128,7 @@ Then start Claude Code and run `/relay:setup-project`. Commit that repo's `.clau
 
 Everything Claude loads every turn costs tokens. Measured with `/context` on 2026-10-14:
 
-- **relay: 79 tokens per turn.** The `reviewer` and `tester` agent descriptions cost 44 and 35. Neither skill appears in the Skills list (they set `disable-model-invocation`), so they cost nothing until you run them. The hooks add no tokens: the gate costs nothing unless it blocks, and the board's emit hook is silent. (Measured before the board existed; its hooks add no description, so I expect no change but have not re-measured.) `claude plugin details relay` prints a static estimate of about 123 tokens that counts the skills, so it overstates.
+- **relay: 79 tokens per turn.** The `reviewer` and `tester` agent descriptions cost 44 and 35. None of the skills appears in the Skills list (all three set `disable-model-invocation`), so they cost nothing until you run them. The hooks add no tokens: the gate costs nothing unless it blocks, and the board's emit hook is silent. (Measured before the board existed; its hooks add no description, so I expect no change but have not re-measured.) `claude plugin details relay` prints a static estimate of about 123 tokens that counts the skills, so it overstates.
 - **SuperClaude: about 0.9k tokens per turn.** Custom agents went from 1.1k to 2.0k for its 20 agents (about 45 each). The Skills line stayed at 9.8k, so its 30 commands showed no measurable cost there. These figures compare two sessions and are rounded to 0.1k.
 
 ## License
