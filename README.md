@@ -17,6 +17,9 @@ The same checklist, shorter, is built into the board: click **Guide** at the top
 
 ```
 docs/guide.html                   the visual field guide (open in a browser)
+AGENTS.md                         the brief for any coding agent here: commands, rules, known traps
+CLAUDE.md                         one line that imports AGENTS.md
+.github/workflows/ci.yml          CI: the self-test on Ubuntu and Windows for every PR
 .claude-plugin/marketplace.json   the catalog: "relay-agents" lists the plugin "relay"
 plugins/relay/                    the plugin itself
   .claude-plugin/plugin.json      name, version, license
@@ -30,7 +33,7 @@ plugins/relay/                    the plugin itself
   hooks/emit.mjs, events.mjs      silent hook that records status events
   board/server.mjs, state.mjs     the board's server and its event-to-card logic
   board/index.html                the board page and its short guide
-  (each .mjs has a .test.mjs next to it)
+  (tests sit next to the code; events.mjs is covered by emit.test.mjs)
 .claude/                          this repo's own config (relay.json, settings.json)
 .claude/commands/sc/, agents/     SuperClaude (third-party, see THIRD_PARTY/)
 ```
@@ -63,6 +66,8 @@ plugins/relay/                    the plugin itself
 `gates` run at every stop and must be fast. `slow` is for builds and smoke tests; only `/relay:ship` runs them.
 
 Self-test: `node --test "plugins/relay/**/*.test.mjs"`.
+
+CI: `.github/workflows/ci.yml` runs the same self-test on Ubuntu and Windows for every pull request and every push to `main`. It skips `claude plugin validate`, because the runner has no Claude CLI; the Stop gate here still runs that one locally. CI is advisory: without branch protection, a red run does not block a merge.
 
 ## The board: every session at a glance
 
@@ -118,7 +123,7 @@ Start it from any session where relay is enabled with `/relay:board`, or run `no
 ## Skills
 
 - `/relay:board`: starts the board server and opens the page.
-- `/relay:setup-project`: run once in a new repo. Detects the stack, tries each check and keeps only those that pass today and need no running server, writes `.claude/relay.json`, writes a short `CLAUDE.md` if none exists, and adds deny rules for deploy, publish and remote-database scripts. It shows everything before writing.
+- `/relay:setup-project`: run once in a new repo. Detects the stack, tries each check and keeps only those that pass today and need no running server, writes `.claude/relay.json`, writes an `AGENTS.md` brief and a one-line `CLAUDE.md` that imports it (it never overwrites either file), and adds deny rules for deploy, publish and remote-database scripts. It shows everything before writing.
 - `/relay:ship [task]`: runs the gate and the slow checks, sends the diff to the reviewer agent, then asks before commit, push and PR. It refuses to work on `main`.
 
 ## Install relay in another repo
@@ -130,7 +135,7 @@ claude plugin marketplace add Phreyle/relay-agents --scope project
 claude plugin install relay@relay-agents --scope project
 ```
 
-Then start Claude Code and run `/relay:setup-project`. Commit that repo's `.claude/settings.json` so collaborators get the same setup (each collaborator runs the install command once). This repo is private, so it works wherever your git login works.
+Then start Claude Code and run `/relay:setup-project`. Commit that repo's `.claude/settings.json` so collaborators get the same setup (each collaborator runs the install command once). Commit `.claude/relay.json`, `AGENTS.md` and `CLAUDE.md` too. This repo is private, so it works wherever your git login works.
 
 ## Update relay
 
@@ -149,6 +154,7 @@ Everything Claude loads every turn costs tokens. Measured with `/context` on 202
 
 - **relay: 79 tokens per turn.** The `reviewer` and `tester` agent descriptions cost 44 and 35. None of the skills appears in the Skills list (all three set `disable-model-invocation`), so they cost nothing until you run them. The hooks add no tokens: the gate costs nothing unless it blocks, and the board's emit hook is silent. (Measured before the board existed; its hooks add no description, so I expect no change but have not re-measured.) `claude plugin details relay` prints a static estimate of about 123 tokens that counts the skills, so it overstates.
 - **SuperClaude: about 0.9k tokens per turn.** Custom agents went from 1.1k to 2.0k for its 20 agents (about 45 each). The Skills line stayed at 9.8k, so its 30 commands showed no measurable cost there. These figures compare two sessions and are rounded to 0.1k.
+- **This repo's `AGENTS.md`: about 700 tokens per session** (2,780 characters on 2026-10-15 at roughly 4 characters per token; an estimate, not measured with `/context`, and the file will grow). A brief is loaded into every session of the project, so keep it short.
 
 ## License
 
