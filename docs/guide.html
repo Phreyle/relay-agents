@@ -165,7 +165,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <p>Type <span class="cmd">/relay:setup-project</span>. Claude finds your tests, lint and typecheck, keeps only the ones that pass today without a running server, and shows the plan. After your yes it writes:</p>
 <ul>
 <li><code>.claude/relay.json</code>: the checks. <code>gates</code> run every time Claude says done, so keep them fast. <code>slow</code> (builds, smoke tests) only run in <code>/relay:ship</code>.</li>
-<li>A short <code>CLAUDE.md</code>, only if the project has none.</li>
+<li>An <code>AGENTS.md</code> brief (what the project is, how to run the checks, a "known traps" list) and a one-line <code>CLAUDE.md</code> that imports it. Skipped if the project already has a <code>CLAUDE.md</code>.</li>
 <li>Deny rules in <code>.claude/settings.json</code> that block the deploy, publish and remote-database scripts it finds. A guardrail, not a lock: it blocks those script names, not every way to deploy.</li>
 </ul>
 </div></div>
@@ -267,7 +267,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <tr><th>What</th><th>Where</th></tr>
 <tr><td>This repo</td><td><code>C:\Users\huash\Documents\GitHub\relay-agents</code> and GitHub <code>Phreyle/relay-agents</code> (private)</td></tr>
 <tr><td>Relay's source</td><td><code>plugins/relay/</code> (hooks, board, skills, agents)</td></tr>
-<tr><td>Per-project settings</td><td><code>.claude/relay.json</code> (checks), <code>.claude/settings.json</code> (deny rules), <code>CLAUDE.md</code></td></tr>
+<tr><td>Per-project settings</td><td><code>.claude/relay.json</code> (checks), <code>.claude/settings.json</code> (deny rules), <code>AGENTS.md</code> and <code>CLAUDE.md</code> (the brief)</td></tr>
 <tr><td>Short guide</td><td>The <strong>Guide</strong> button on the board, <code>http://127.0.0.1:4317</code> (the board must be running)</td></tr>
 <tr><td>Board data</td><td><code>C:\Users\huash\.claude\plugins\data\relay-relay-agents\events.jsonl</code></td></tr>
 <tr><td>Installed copies</td><td><code>C:\Users\huash\.claude\plugins\cache\relay-agents\relay\&lt;version&gt;\</code></td></tr>
@@ -300,7 +300,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 <p><strong>Known limits:</strong> "needs you" stays until the next event, because nothing fires when you answer a prompt. "Ready to ship" only means the checks passed, not that you committed.</p>
 </div>
 
-<footer>Written 2026-10-15 for relay 0.2.1. Lives at <code>docs/guide.html</code> in Phreyle/relay-agents. Open it by double-clicking, or ask Claude to open it.</footer>
+<footer>Written 2026-10-15 for relay 0.3.0. Lives at <code>docs/guide.html</code> in Phreyle/relay-agents. Open it by double-clicking, or ask Claude to open it.</footer>
 </main>
 </body>
 </html>
