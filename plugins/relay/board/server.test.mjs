@@ -36,6 +36,7 @@ test('serves the page, the state and a 404', () =>
     const page = await get(port, '/');
     assert.equal(page.status, 200);
     assert.match(page.body, /Relay board/);
+    assert.match(page.body, /id="guide"/);
     assert.match(page.headers['content-security-policy'], /default-src 'none'/);
     const state = JSON.parse((await get(port, '/api/state')).body);
     assert.deepEqual([state.cards[0].repo, state.cards[0].state], ['katiwala', 'working']);
@@ -70,6 +71,7 @@ test('pushes a changed card over the event stream', () =>
       }).on('error', () => {});
     });
     await new Promise((r) => setTimeout(r, 300));
+    emit({ session: 'a', repo: 'bathala', event: 'UserPromptSubmit', task: 'x' }, { dir: data });
     emit({ session: 'a', repo: 'bathala', event: 'Stop', result: 'passed' }, { dir: data });
     assert.match(await seen, /"repo":"bathala"/);
   }));
