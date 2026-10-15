@@ -1,7 +1,7 @@
 {
   "name": "relay",
-  "version": "0.1.0",
-  "description": "Reviewer and tester agents, setup and ship skills, and a Stop-hook quality gate",
+  "version": "0.2.0",
+  "description": "Reviewer and tester agents, setup, ship and board skills, a Stop-hook quality gate, and a live status board",
   "author": { "name": "Phreyle" },
   "repository": "https://github.com/Phreyle/relay-agents",
   "license": "MIT"
