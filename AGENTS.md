@@ -23,7 +23,7 @@ My Claude Code playground. It holds `relay` (my own plugin: reviewer, security-r
 
 ### Token budget
 
-- One session per task or PR.
+- One session per task or PR. In the main session, offer a separate session (own branch) for each new task of more than a few steps. Questions and one-line edits stay in the main session.
 - After an auto-compact, or at about 150k tokens of context, say so and suggest a fresh session. State lives in `AGENTS.md`, memory and `docs/plans`.
 - No cold-read test rounds, paper walk-throughs or second review passes unless I ask: one `relay:reviewer` plus `relay:security-reviewer` pass per PR, plus the one re-run `/relay:ship` does after a fix.
 - Subagents: use the narrow-tool `relay:*` agents, and model `haiku` for mechanical jobs. Never `general-purpose`, except for a skill test I ask for.
