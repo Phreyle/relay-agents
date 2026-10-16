@@ -1,6 +1,6 @@
 # relay-agents
 
-My Claude Code playground. It holds `relay` (my own plugin: reviewer and tester agents, setup, plan, ship and board skills, a Stop-hook quality gate, a live status board) and SuperClaude 4.3.0 (third-party, vendored, this repo only). `README.md` has the full picture and `docs/guide.html` the visual guide.
+My Claude Code playground. It holds `relay` (my own plugin: reviewer and tester agents, setup, plan, verify, ship and board skills, a Stop-hook quality gate, a live status board) and SuperClaude 4.3.0 (third-party, vendored, this repo only). `README.md` has the full picture and `docs/guide.html` the visual guide.
 
 ## Commands
 
@@ -13,6 +13,7 @@ My Claude Code playground. It holds `relay` (my own plugin: reviewer and tester 
 - Work on a branch, never on `main`. Open a PR. The owner merges: never merge, force-push or push `main`.
 - Ask before every commit, push and PR.
 - More than one PR of work? Ask me to run `/relay:plan` first (agents cannot run it). It writes `docs/plans/<slug>-<date>.md`, and `/relay:ship` ticks its boxes. The roadmap is `docs/plans/relay-upgrades-2026-10-15.md`.
+- To see a change work for real, ask me to run `/relay:verify` (agents cannot). This repo's recipe is `.claude/verify.md`: the board on port 4398 with a temp data folder.
 - Changed anything under `plugins/relay/`? Bump `version` in `plugins/relay/.claude-plugin/plugin.json`, or installs keep the old copy.
 - Hooks stay silent: stdout from `SessionStart` and `UserPromptSubmit` hooks goes into Claude's context. `emit.mjs` prints nothing.
 - Keep files short. Tests sit next to the code (`events.mjs` is covered through `emit.test.mjs`).
@@ -31,4 +32,5 @@ Add one line here each time something non-obvious costs you time: what happened 
 - `claude plugin list` omits a relative-path plugin from a local marketplace. Use `claude plugin details relay`.
 - A running board keeps the code it started with. `/relay:board` runs it from the installed plugin copy (`${CLAUDE_PLUGIN_ROOT}`), so run `claude plugin update` first, then restart the board.
 - A skill with `disable-model-invocation` cannot be run by the agent. Test its text by having a fresh subagent follow it step by step in scratch folders under the session scratchpad, then send the folders to the Recycle Bin.
+- The Browser pane can be closed, and then `tabs_create` fails: open it with `preview_start` and a `url`. On Windows, TaskStop on an app started through `npm` can leave its `node` child listening: check the port and stop that PID.
 - A board card needs a real event (start, prompt, notification, failure or end). A gate run by hand makes no card.
