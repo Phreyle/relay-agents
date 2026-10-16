@@ -21,6 +21,15 @@ My Claude Code playground. It holds `relay` (my own plugin: reviewer, security-r
 - Never hard-delete the owner's files (use the Recycle Bin). Never change PATH or system settings.
 - `.claude/commands/sc/` and the SuperClaude agents in `.claude/agents/` are vendored. Do not edit them. How to refresh: `THIRD_PARTY/SuperClaude-LICENSE.md`.
 
+### Token budget
+
+- One session per task or PR.
+- After an auto-compact, or at about 150k tokens of context, say so and suggest a fresh session. State lives in `AGENTS.md`, memory and `docs/plans`.
+- No cold-read test rounds, paper walk-throughs or second review passes unless I ask: one `relay:reviewer` plus `relay:security-reviewer` pass per PR, plus the one re-run `/relay:ship` does after a fix.
+- Subagents: use the narrow-tool `relay:*` agents, and model `haiku` for mechanical jobs. Never `general-purpose`, except for a skill test I ask for.
+- Browser only when the change touches UI, or when I run `/relay:verify` or `/relay:ship`.
+- When I ask about usage, call `get_usage`.
+
 ## Known traps
 
 Add one line here each time something non-obvious costs you time: what happened and the fix.
