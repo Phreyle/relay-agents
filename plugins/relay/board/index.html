@@ -8,11 +8,12 @@
 :root{--bg:#f7f6f3;--card:#fff;--text:#1f1e1d;--muted:#6b6a66;--line:#e4e2dc;
 --blue-bg:#e6f1fb;--blue:#0c447c;--amber-bg:#faeeda;--amber:#633806;--green-bg:#eaf3de;--green:#27500a;
 --red-bg:#fcebeb;--red:#791f1f;--gray-bg:#f1efe8;--gray:#444441;--purple-bg:#eeedfe;--purple:#3c3489;
---ok:#3b6d11;--bad:#a32d2d;--idle:#b4b2a9}
+--ok:#3b6d11;--idle:#b4b2a9;
+--st-purple:#7f77dd;--st-amber:#ba7517;--st-red:#e24b4a;--st-green:#639922;--st-blue:#378add;--st-gray:#888780}
 @media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--text:#ecebe6;--muted:#a3a29b;--line:#34332f;
 --blue-bg:#0c447c;--blue:#b5d4f4;--amber-bg:#633806;--amber:#fac775;--green-bg:#27500a;--green:#c0dd97;
 --red-bg:#791f1f;--red:#f7c1c1;--gray-bg:#2e2d2a;--gray:#d3d1c7;--purple-bg:#3c3489;--purple:#cecbf6;
---ok:#97c459;--bad:#f09595;--idle:#5f5e5a}}
+--ok:#97c459;--idle:#5f5e5a}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
@@ -24,21 +25,34 @@ h1{font-size:20px;font-weight:500;margin:0}
 #sum{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;min-height:28px}
 .chip{font-size:13px;padding:3px 10px;border-radius:8px}
 #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
-.repo{font-weight:500;overflow-wrap:anywhere}
-.tag{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.card{--w:4px;--st:var(--idle);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px 14px 20px}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:var(--st)}
+.card.needs_you{--st:var(--st-purple);--soft:var(--purple-bg);--deep:var(--purple)}
+.card.blocked{--st:var(--st-amber);--soft:var(--amber-bg);--deep:var(--amber)}
+.card.error{--st:var(--st-red);--soft:var(--red-bg);--deep:var(--red)}
+.card.ready{--st:var(--st-green)}.card.checking,.card.working{--st:var(--st-blue)}.card.done{--st:var(--st-gray)}
+.card.ended::before{background:repeating-linear-gradient(to bottom,var(--st) 0 6px,transparent 6px 10px)}
+.card.loud{--w:6px;border-color:var(--st);background:color-mix(in srgb,var(--st) 10%,var(--card))}
+.card.quiet{--w:3px;background:transparent}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px}
 .ago{font-size:12px;color:var(--muted);white-space:nowrap}
-.badge{display:inline-block;font-size:13px;padding:3px 10px;border-radius:8px}
+.badge{display:inline-block;font-size:12.5px;padding:2px 10px;border-radius:8px;white-space:nowrap}
+.card.loud .badge{background:var(--deep);color:var(--soft);font-weight:600}
 .blue{background:var(--blue-bg);color:var(--blue)}.amber{background:var(--amber-bg);color:var(--amber)}
 .green{background:var(--green-bg);color:var(--green)}.red{background:var(--red-bg);color:var(--red)}
 .gray{background:var(--gray-bg);color:var(--gray)}.purple{background:var(--purple-bg);color:var(--purple)}
-.task{margin:10px 0 2px;font-size:14px;overflow-wrap:anywhere}
-.detail{margin:0 0 10px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
-.gates{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
-.gates span{display:inline-flex;align-items:center;gap:5px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--idle)}
-.dot.pass{background:var(--ok)}.dot.fail{background:var(--bad)}
+.task{margin:0;font-size:16px;line-height:1.35;font-weight:600;overflow-wrap:anywhere}
+.card.quiet .task{font-weight:400;color:var(--muted)}
+.repo{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.tag{font-size:12px;font-weight:400;color:var(--muted);margin-left:6px}
+.detail{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.card.loud .detail{color:var(--text)}
+.gates{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.gate{display:inline-flex;align-items:center;gap:5px;font-size:12px;line-height:1.4;padding:1px 9px 1px 7px;border:1px dashed var(--muted);border-radius:6px;color:var(--muted);overflow-wrap:anywhere}
+.gate.pass{border:1px solid transparent;background:var(--green-bg);color:var(--green)}
+.gate.fail{border:1px solid transparent;background:var(--red-bg);color:var(--red);font-weight:600}
+.mark{font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .empty{grid-column:1/-1;color:var(--muted);text-align:center;padding:48px 0}
 .bar{display:flex;align-items:center;gap:14px}
 button{font:inherit;font-size:13px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px 12px;cursor:pointer}
@@ -93,6 +107,9 @@ const guideBtn = document.getElementById('guideBtn');
 let guideOpen = null; // the first snapshot decides: open when there is nothing to watch yet
 const LABEL = { needs_you: 'Needs you', error: 'API error', ready: 'Ready to ship', checking: 'Checking gates', working: 'Working', done: 'Turn finished', idle: 'Idle', ended: 'Ended' };
 const CLS = { needs_you: 'purple', blocked: 'amber', error: 'red', ready: 'green', checking: 'blue', working: 'blue', done: 'gray', idle: 'gray', ended: 'gray' };
+// loud = needs a person, mid = in motion, quiet = nothing to do
+const TIER = { needs_you: 'loud', blocked: 'loud', error: 'loud', ready: 'mid', checking: 'mid', working: 'mid', done: 'quiet', idle: 'quiet', ended: 'quiet' };
+const MARK = { pass: ['✓', ' passed'], fail: ['✕', ' failed'], pending: ['○', ' pending'] };
 const GROUPS = [['needs_you', 'need you'], ['blocked', 'blocked'], ['error', 'with errors'], ['ready', 'ready to ship'], ['working', 'working']];
 let cards = [];
 
@@ -124,20 +141,25 @@ function render() {
   const perRepo = {};
   for (const c of cards) perRepo[c.repo] = (perRepo[c.repo] || 0) + 1;
   for (const c of cards) {
-    const card = el('div', 'card');
-    const top = el('div', 'top');
-    const name = el('span', 'repo', c.repo || 'unknown');
-    if (perRepo[c.repo] > 1) name.append(el('span', 'tag', c.tag));
-    top.append(name, el('span', 'ago', ago(c.last) + (c.stale ? ' (quiet)' : '')));
-    card.append(top, el('span', 'badge ' + CLS[c.state], label(c)));
+    const card = el('div', 'card ' + c.state + ' ' + TIER[c.state]);
+    const head = el('div', 'head');
+    head.append(el('span', 'badge ' + CLS[c.state], label(c)), el('span', 'ago', ago(c.last) + (c.stale ? ' (quiet)' : '')));
+    card.append(head);
     if (c.task) card.append(el('p', 'task', c.task));
-    card.append(el('p', 'detail', c.detail));
+    // with no task line, the repo is the headline
+    const repo = el('p', c.task ? 'repo' : 'task', c.repo || 'unknown');
+    if (perRepo[c.repo] > 1) repo.append(el('span', 'tag', c.tag));
+    card.append(repo);
+    if (c.detail) card.append(el('p', 'detail', c.detail));
     if (c.gates.length) {
       const g = el('div', 'gates');
       for (const x of c.gates) {
-        const s = el('span');
-        s.append(el('i', 'dot ' + x.status), document.createTextNode(x.name));
-        g.append(s);
+        const [glyph, word] = MARK[x.status] || MARK.pending;
+        const mark = el('span', 'mark', glyph);
+        mark.setAttribute('aria-hidden', 'true');
+        const chip = el('span', 'gate ' + x.status);
+        chip.append(mark, x.name, el('span', 'sr', word));
+        g.append(chip);
       }
       card.append(g);
     }
