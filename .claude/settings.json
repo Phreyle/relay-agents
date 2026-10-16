@@ -2,5 +2,6 @@
   "extraKnownMarketplaces": {
     "relay-agents": { "source": { "source": "directory", "path": "." } }
   },
-  "enabledPlugins": { "relay@relay-agents": true }
+  "enabledPlugins": { "relay@relay-agents": true },
+  "env": { "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "15" }
 }
