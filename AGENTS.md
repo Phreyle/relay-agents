@@ -29,6 +29,7 @@ My Claude Code playground. It holds `relay` (my own plugin: reviewer, security-r
 - Subagents: use the narrow-tool `relay:*` agents, and model `haiku` for mechanical jobs. Never `general-purpose`, except for a skill test I ask for.
 - Browser only when the change touches UI, or when I run `/relay:verify` or `/relay:ship`.
 - When I ask about usage, call `get_usage`.
+- On a 200k window, remove `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` from `.claude/settings.json`: 15% is 30k, below the 75k a session starts with, so it would compact every turn.
 
 ## Known traps
 
@@ -44,3 +45,4 @@ Add one line here each time something non-obvious costs you time: what happened 
 - The Browser pane can be closed, and then `tabs_create` fails: open it with `preview_start` and a `url`. On Windows, TaskStop on an app started through `npm` can leave its `node` child listening: check the port and stop that PID.
 - `$ARGUMENTS` in a skill body is replaced by what I typed after the command. Write it once, where the argument goes, and say "the argument" elsewhere (`/relay:ship` step 4 once had a second one).
 - A board card needs a real event (start, prompt, notification, failure or end). A gate run by hand makes no card.
+- `get_usage` prints `autoCompactsAtPercent` 97 even when the lean-mode override is live. The real check is `compact_boundary` `preTokens` in the transcripts under `~/.claude/projects/`.
