@@ -6,7 +6,7 @@
     {
       "name": "relay",
       "source": "./plugins/relay",
-      "description": "Reviewer and tester agents, setup, plan, verify, ship and board skills, a Stop-hook quality gate, and a live status board"
+      "description": "Reviewer, security reviewer and tester agents, setup, plan, verify, ship and board skills, a Stop-hook quality gate, and a live status board"
     }
   ]
 }

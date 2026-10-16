@@ -31,7 +31,7 @@ Add the pieces Angelo Umali's public workflow has and relay lacks, one small PR 
 
 - Game development is out of scope: the owner's Unity work lives in Unity Version Control, not GitHub.
 - The order is the one on the map. Each phase is its own PR, and the owner merges it.
-- Parking lot, not planned yet: many agents with one worktree each, and a scoreboard of what the gate caught.
+- Parking lot, not planned yet: many agents with one worktree each, a scoreboard of what the gate caught, and a first-run yes before relay runs commands a repo supplies (`relay.json`, `verify.md`; found by the security review of phase 5).
 
 ## Log
 

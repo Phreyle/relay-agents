@@ -2,7 +2,7 @@
 
 A playground for learning AI engineering with Claude Code. It holds two things that run side by side, enabled for this repo only:
 
-- **relay**: my own Claude Code plugin (two agents, five skills, a Stop-hook quality gate, and a live status board for every Claude session).
+- **relay**: my own Claude Code plugin (three agents, five skills, a Stop-hook quality gate, and a live status board for every Claude session).
 - **SuperClaude** v4.3.0: a third-party command and agent framework, installed at project scope: 30 `/sc:*` commands in `.claude/commands/sc/` and 20 agents in `.claude/agents/`. It has no Claude Code plugin yet, and its official installer writes to global `~/.claude`, so it is installed by script instead. See `THIRD_PARTY/SuperClaude-LICENSE.md` for its license, the script and how to refresh it.
 
 ## Quick guide: read this first after a break
@@ -25,6 +25,7 @@ CLAUDE.md                         one line that imports AGENTS.md
 plugins/relay/                    the plugin itself
   .claude-plugin/plugin.json      name, version, license
   agents/reviewer.md              read-only reviewer
+  agents/security-reviewer.md     read-only security reviewer
   agents/tester.md                writes tests in the project's own style
   skills/setup-project/SKILL.md   /relay:setup-project
   skills/plan/SKILL.md            /relay:plan
@@ -43,7 +44,7 @@ plugins/relay/                    the plugin itself
 
 - **Marketplace**: a catalog file that tells Claude Code where plugins live, so other repos can install relay by name.
 - **Plugin**: a folder of agents, skills and hooks that Claude Code loads as one unit. Its commands are prefixed with the plugin name, for example `/relay:ship`.
-- **Agent** (subagent): a specialist Claude can hand a job to, with its own tool allowlist. `reviewer` only has Read, Grep and Glob, so it cannot edit anything. `tester` can edit and run, but its instructions limit it to test files.
+- **Agent** (subagent): a specialist Claude can hand a job to, with its own tool allowlist. `reviewer` and `security-reviewer` only have Read, Grep and Glob, so they cannot edit anything. `tester` can edit and run, but its instructions limit it to test files.
 - **Skill**: a reusable instruction file that runs when you type its command. All five relay skills set `disable-model-invocation`, so they are never loaded unless you call them.
 - **Hook**: a script Claude Code runs at a lifecycle event. relay uses `Stop`, which fires each time Claude says it is done, plus five more events for the board.
 
@@ -129,7 +130,7 @@ Start it from any session where relay is enabled with `/relay:board`, or run `no
 - `/relay:setup-project`: run once in a new repo. Detects the stack, tries each check and keeps only those that pass today and need no running server, writes `.claude/relay.json` (an existing one is kept), writes an `AGENTS.md` brief and a one-line `CLAUDE.md` that imports it (each only if missing, never overwritten; if both exist without an import, it offers to add one), and adds deny rules for deploy, publish and remote-database scripts. It shows everything before writing.
 - `/relay:plan [what you want]`: for a bigger job. Saves your words word for word, a goal, up to 6 phases with tick boxes, assumptions and a log in `docs/plans/<slug>-<date>.md`, after you confirm. It writes no code and does not start the work.
 - `/relay:verify [what to check]`: runs the real app from the recipe in `.claude/verify.md` (or drafts one and asks first), drives it with the built-in browser, counts console errors, failed requests and app log errors, takes a screenshot, and ends PASS, FAIL or UNVERIFIED with the evidence. It opens only localhost, never uses real credentials, never kills a process it did not start, and stops what it started.
-- `/relay:ship [task]`: runs the gate and the slow checks, sends the diff to the reviewer agent, ticks the boxes of a plan in progress whose "Done when" check it has just confirmed (and logs it), then asks before commit, push and PR. It refuses to work on `main`.
+- `/relay:ship [task]`: runs the gate and the slow checks, sends the change (untracked files included) to the `reviewer` and `security-reviewer` agents, follows the verify recipe when the change touches the app and a recipe exists (a FAIL stops it and asks you), ticks the boxes of a plan in progress whose "Done when" check it has just confirmed (and logs it), then asks before commit, push and PR, with a Checks list in the PR body. It refuses to work on `main`.
 
 ## Install relay in another repo
 
@@ -157,9 +158,9 @@ Then start Claude Code and run `/relay:setup-project`. Commit that repo's `.clau
 
 Everything Claude loads every turn costs tokens. Measured with `/context` on 2026-10-14:
 
-- **relay: 79 tokens per turn.** The `reviewer` and `tester` agent descriptions cost 44 and 35. None of the skills appears in the Skills list (all five set `disable-model-invocation`), so they cost nothing until you run them. The hooks add no tokens: the gate costs nothing unless it blocks, and the board's emit hook is silent. (Measured before the board existed; its hooks add no description, so I expect no change but have not re-measured.) `claude plugin details relay` prints a static estimate of about 123 tokens (with three skills, before `/relay:plan`) that counts the skills, so it overstates.
+- **relay: about 130 tokens per turn** (79 measured on 2026-10-14 with two agents, plus about 50 estimated for `security-reviewer` from its description's length, 107 characters against the reviewer's 87; not re-measured with `/context`). The `reviewer` and `tester` agent descriptions cost 44 and 35. None of the skills appears in the Skills list (all five set `disable-model-invocation`), so they cost nothing until you run them. The hooks add no tokens: the gate costs nothing unless it blocks, and the board's emit hook is silent. (Measured before the board existed; its hooks add no description, so I expect no change but have not re-measured.) `claude plugin details relay` prints a static estimate that counts the skills and so overstates (about 123 tokens when I last ran it, with three skills and before `/relay:plan`).
 - **SuperClaude: about 0.9k tokens per turn.** Custom agents went from 1.1k to 2.0k for its 20 agents (about 45 each). The Skills line stayed at 9.8k, so its 30 commands showed no measurable cost there. These figures compare two sessions and are rounded to 0.1k.
-- **This repo's `AGENTS.md`: about 900 tokens per session** (3,652 characters on 2026-10-16 at roughly 4 characters per token; an estimate, not measured with `/context`, and the file will grow). A brief is loaded into every session of the project, so keep it short.
+- **This repo's `AGENTS.md`: about 980 tokens per session** (3,918 characters on 2026-10-16 at roughly 4 characters per token; an estimate, not measured with `/context`, and the file will grow). A brief is loaded into every session of the project, so keep it short.
 
 ## License
 
