@@ -5,32 +5,40 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Relay board</title>
 <style>
-:root{--bg:#f7f6f3;--card:#fff;--text:#1f1e1d;--muted:#6b6a66;--line:#e4e2dc;
+:root{color-scheme:light dark;--bg:#f7f6f3;--card:#fff;--text:#1f1e1d;--muted:#6b6a66;--line:#e4e2dc;
 --blue-bg:#e6f1fb;--blue:#0c447c;--amber-bg:#faeeda;--amber:#633806;--green-bg:#eaf3de;--green:#27500a;
 --red-bg:#fcebeb;--red:#791f1f;--gray-bg:#f1efe8;--gray:#444441;--purple-bg:#eeedfe;--purple:#3c3489;
---ok:#3b6d11;--idle:#b4b2a9;
+--idle:#b4b2a9;
 --st-purple:#7f77dd;--st-amber:#ba7517;--st-red:#e24b4a;--st-green:#639922;--st-blue:#378add;--st-gray:#888780}
 @media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--text:#ecebe6;--muted:#a3a29b;--line:#34332f;
 --blue-bg:#0c447c;--blue:#b5d4f4;--amber-bg:#633806;--amber:#fac775;--green-bg:#27500a;--green:#c0dd97;
 --red-bg:#791f1f;--red:#f7c1c1;--gray-bg:#2e2d2a;--gray:#d3d1c7;--purple-bg:#3c3489;--purple:#cecbf6;
---ok:#97c459;--idle:#5f5e5a}}
+--idle:#5f5e5a}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-h1{font-size:20px;font-weight:500;margin:0}
-.live{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.live i{width:8px;height:8px;border-radius:50%;background:var(--idle);display:inline-block}
-.live.on i{background:var(--ok)}
-#sum{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;min-height:28px}
-.chip{font-size:13px;padding:3px 10px;border-radius:8px}
-#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:980px;margin:0 auto;padding:28px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{display:flex;align-items:center;gap:10px;margin:0;font-size:22px;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+h1::before{content:"";flex:none;width:5px;height:22px;border-radius:2px;background:linear-gradient(to bottom,var(--st-purple) 0 33.4%,var(--st-amber) 0 66.7%,var(--st-green) 0)}
+.bar{display:flex;align-items:center;gap:8px}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:13px;line-height:20px;padding:5px 12px 5px 10px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--muted)}
+.live i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--idle)}
+.live.on{color:var(--text)}
+.live.on i{background:var(--st-green);box-shadow:0 0 0 3px color-mix(in srgb,var(--st-green) 25%,transparent)}
+.live.off i{background:var(--st-amber)}
+#sum{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;min-height:30px}
+#sum[hidden]{display:none}
+.chip{--st:var(--st-gray);display:inline-flex;align-items:center;gap:7px;font-size:13px;line-height:20px;padding:3px 12px 3px 10px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--muted)}
+.chip::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--st)}
+.chip b{font-size:14px;font-weight:600;color:var(--text)}
+.chip.loud{border-color:var(--st);background:color-mix(in srgb,var(--st) 10%,var(--card));color:var(--text)}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:12px}
 .card{--w:4px;--st:var(--idle);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px 14px 20px}
 .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:var(--st)}
-.card.needs_you{--st:var(--st-purple);--soft:var(--purple-bg);--deep:var(--purple)}
-.card.blocked{--st:var(--st-amber);--soft:var(--amber-bg);--deep:var(--amber)}
-.card.error{--st:var(--st-red);--soft:var(--red-bg);--deep:var(--red)}
-.card.ready{--st:var(--st-green)}.card.checking,.card.working{--st:var(--st-blue)}.card.done{--st:var(--st-gray)}
+.card.needs_you,.chip.needs_you{--st:var(--st-purple);--soft:var(--purple-bg);--deep:var(--purple)}
+.card.blocked,.chip.blocked{--st:var(--st-amber);--soft:var(--amber-bg);--deep:var(--amber)}
+.card.error,.chip.error{--st:var(--st-red);--soft:var(--red-bg);--deep:var(--red)}
+.card.ready,.chip.ready{--st:var(--st-green)}.card.checking,.card.working,.chip.working{--st:var(--st-blue)}.card.done{--st:var(--st-gray)}
 .card.ended::before{background:repeating-linear-gradient(to bottom,var(--st) 0 6px,transparent 6px 10px)}
 .card.loud{--w:6px;border-color:var(--st);background:color-mix(in srgb,var(--st) 10%,var(--card))}
 .card.quiet{--w:3px;background:transparent}
@@ -53,24 +61,38 @@ h1{font-size:20px;font-weight:500;margin:0}
 .gate.fail{border:1px solid transparent;background:var(--red-bg);color:var(--red);font-weight:600}
 .mark{font-weight:700}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.empty{grid-column:1/-1;color:var(--muted);text-align:center;padding:48px 0}
-.bar{display:flex;align-items:center;gap:14px}
-button{font:inherit;font-size:13px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px 12px;cursor:pointer}
+.empty{grid-column:1/-1;position:relative;overflow:hidden;padding:18px 20px 20px 24px;border:1px dashed var(--muted);border-radius:12px;color:var(--muted);overflow-wrap:anywhere}
+.empty::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:repeating-linear-gradient(to bottom,var(--st-gray) 0 6px,transparent 6px 10px)}
+.empty b{display:block;font-size:16px;line-height:1.35;font-weight:600;color:var(--text)}
+button{font:inherit;font-size:13px;line-height:20px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 14px;cursor:pointer}
 button:hover{border-color:var(--muted)}
+button[aria-expanded=true]{background:var(--gray-bg)}
+button:focus-visible{outline:2px solid var(--st-blue);outline-offset:2px}
 code{font:12.5px ui-monospace,Consolas,monospace;background:var(--gray-bg);border-radius:6px;padding:1px 6px}
-#guide{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:0 0 20px}
+#guide{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px 16px 24px;margin:0 0 18px}
+#guide::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--st-gray)}
 #guide[hidden]{display:none}
-#guide h2{font-size:16px;font-weight:500;margin:0 0 4px}
-#guide .key,#guide .foot{font-size:12.5px;color:var(--muted);margin:4px 0 10px}
-#guide .foot{margin:10px 0 0}
+#guide h2{font-size:17px;font-weight:600;line-height:1.3;margin:0 0 10px}
+#guide .key{font-size:12.5px;line-height:2;color:var(--muted);margin:0 0 4px;padding:6px 12px;background:var(--bg);border-radius:8px}
 #guide ol{list-style:none;margin:0;padding:0;counter-reset:s}
-#guide li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);counter-increment:s}
-#guide li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--gray-bg);color:var(--gray);display:flex;align-items:center;justify-content:center;font-size:13px}
+#guide li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px solid var(--line);counter-increment:s;overflow-wrap:anywhere}
+#guide li:first-child{border-top:0}
+#guide li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--gray-bg);color:var(--gray);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
 #guide small{display:block;color:var(--muted);font-size:13px}
+#guide .foot{margin:0;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.sw{font-weight:600;white-space:nowrap}
+.sw::before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:50%;background:var(--st)}
+.sw.p{--st:var(--st-purple)}.sw.a{--st:var(--st-amber)}.sw.g{--st:var(--st-green)}
 .b{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.02em;padding:1px 8px;border-radius:999px;white-space:nowrap;vertical-align:1px}
 .b.you{background:var(--blue-bg);color:var(--blue)}.b.ai{background:var(--purple-bg);color:var(--purple)}
 .b.auto{background:var(--green-bg);color:var(--green)}.b.gh{background:var(--gray-bg);color:var(--gray)}
 .b.req,.b.opt{padding:0 7px}.b.req{border:1.5px solid var(--text)}.b.opt{border:1.5px dashed var(--muted);color:var(--muted)}
+@media (max-width:520px){
+main{padding:20px 12px 40px}
+h1{font-size:20px}h1::before{height:20px}
+#guide{padding:14px 14px 14px 18px}
+.empty{padding:16px 16px 18px 20px}
+}
 </style>
 </head>
 <body>
@@ -92,7 +114,7 @@ code{font:12.5px ui-monospace,Consolas,monospace;background:var(--gray-bg);borde
 <li><div><b>Work as usual. Ask for changes.</b> <span class="b ai">ASK AI</span> <span class="b auto">AUTO</span><small>Each time Claude says it is done, relay runs your checks and sends it back if one fails. Nothing to do. Bigger job? <code>/relay:plan</code> first. Want proof it runs? <code>/relay:verify</code>. Both optional.</small></div></li>
 <li><div><b>Happy with it? Type <code>/relay:ship</code>.</b> <span class="b you">YOU</span> <span class="b opt">OPTIONAL</span><small>Claude runs two reviews, and your verify recipe when the change touches the app, then asks before commit, push and PR. Or just ask: "commit this and open a PR".</small></div></li>
 <li><div><b>Merge the PR in GitHub.</b> <span class="b gh">GITHUB</span> <span class="b req">REQUIRED</span><small>The only step outside Claude Code. Relay never merges.</small></div></li>
-<li><div><b>Watch this board.</b> <span class="b auto">AUTO</span><small>Purple: go answer that session. Amber: a check failed, Claude is fixing it. Green: ready to ship.</small></div></li>
+<li><div><b>Watch this board.</b> <span class="b auto">AUTO</span><small><span class="sw p">Purple</span>: go answer that session. <span class="sw a">Amber</span>: a check failed, Claude is fixing it. <span class="sw g">Green</span>: ready to ship.</small></div></li>
 </ol>
 <p class="foot">Installed or updated relay? Type <code>/reload-plugins</code> in each open session. Full guide with pictures: <code>docs/guide.html</code> in the relay-agents repo.</p>
 </section>
@@ -137,7 +159,11 @@ function render() {
   guideBtn.textContent = guideOpen ? 'Hide guide' : 'Guide';
   guideBtn.setAttribute('aria-expanded', String(!!guideOpen));
   grid.replaceChildren();
-  if (!cards.length) grid.append(el('p', 'empty', 'No sessions yet. Start Claude Code in a repo that has relay enabled and send a prompt, and its card appears here.'));
+  if (!cards.length) {
+    const empty = el('div', 'empty');
+    empty.append(el('b', '', 'No sessions yet'), 'Start Claude Code in a repo that has relay enabled and send a prompt, and its card appears here.');
+    grid.append(empty);
+  }
   const perRepo = {};
   for (const c of cards) perRepo[c.repo] = (perRepo[c.repo] || 0) + 1;
   for (const c of cards) {
@@ -168,13 +194,17 @@ function render() {
   sum.replaceChildren();
   for (const [state, text] of GROUPS) {
     const n = cards.filter((c) => c.state === state || (state === 'working' && c.state === 'checking')).length;
-    if (n) sum.append(el('span', 'chip ' + CLS[state], n + ' ' + text));
+    if (!n) continue;
+    const chip = el('span', 'chip ' + state + ' ' + TIER[state]);
+    chip.append(el('b', '', n), ' ' + text);
+    sum.append(chip);
   }
+  sum.hidden = !sum.firstChild; // done, idle and ended cards add no chip
   const urgent = cards.filter((c) => c.state === 'needs_you' || c.state === 'blocked' || c.state === 'error').length;
   document.title = (urgent ? '(' + urgent + ') ' : '') + 'Relay board';
 }
 function setLive(on) {
-  live.className = 'live' + (on ? ' on' : '');
+  live.className = 'live' + (on ? ' on' : ' off');
   live.lastChild.textContent = on ? 'live' : 'reconnecting';
 }
 function connect() {

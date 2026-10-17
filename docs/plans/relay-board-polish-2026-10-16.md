@@ -1,6 +1,6 @@
 # Relay board polish
 
-Status: in progress
+Status: done
 Opened: 2026-10-16
 
 ## Your words
@@ -14,7 +14,7 @@ Make the relay board page easier to read at a glance and nicer to look at, witho
 ## Phases
 
 - [x] **Phase 1: Cards you can scan.** In `plugins/relay/board/index.html`: give each card a status stripe, make "needs you", "blocked" and "error" cards clearly louder than "idle", "ended" and "turn finished", make the task line the card's main text, show each gate as a chip with a check or cross (not colour alone), and tidy the spacing. Bump `version` in `plugins/relay/.claude-plugin/plugin.json`. Done when: the Stop gate passes (self-test and both `claude plugin validate` runs), `/relay:verify` ends PASS, and a screenshot of a seeded board (the 9 states, plus a "Still failing" card and a "(quiet)" card; light and dark) shows each state with its own stripe and label.
-- [ ] **Phase 2: Header, summary, guide, empty state, new picture.** Same file: give the title, the live dot, the summary counts, the guide panel and the empty-board message the same look as the cards, and make the page fit a 375 px phone without sideways scrolling. If any page text that the recipe in `.claude/verify.md` expects changes, update the recipe in the same PR. Replace `docs/board.jpg` with a shot of a seeded board and bump `version`. Done when: the Stop gate passes, `/relay:verify` ends PASS, `document.documentElement.scrollWidth <= window.innerWidth` is true at 375 px wide in the Browser pane, and `docs/board.jpg` shows the new look.
+- [x] **Phase 2: Header, summary, guide, empty state, new picture.** Same file: give the title, the live dot, the summary counts, the guide panel and the empty-board message the same look as the cards, and make the page fit a 375 px phone without sideways scrolling. If any page text that the recipe in `.claude/verify.md` expects changes, update the recipe in the same PR. Replace `docs/board.jpg` with a shot of a seeded board and bump `version`. Done when: the Stop gate passes, `/relay:verify` ends PASS, `document.documentElement.scrollWidth <= window.innerWidth` is true at 375 px wide in the Browser pane, and `docs/board.jpg` shows the new look.
 
 ## Assumptions
 
@@ -30,3 +30,4 @@ Make the relay board page easier to read at a glance and nicer to look at, witho
 
 - 2026-10-16: Plan written.
 - 2026-10-16: Phase 1 done (cards restyled, relay 0.6.1, /relay:verify passed, seeded-board screenshots in light and dark).
+- 2026-10-17: Phase 2 done (header, summary chips, guide and empty state restyled, fits 375 px, new board.jpg, relay 0.6.2, /relay:verify passed).
